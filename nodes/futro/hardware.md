@@ -19,12 +19,6 @@ not compute headroom.
 
 ## Bring-up (when acquired)
 
-1. Human: minimal manual setup — Debian 13 install, network config, SSH key — up to
-   SSH reachability. A detailed step-by-step doc for this is a separate deliverable,
-   not yet written.
-2. Claude (from `raspi`, via SSH): completes the rest — mirrors the pattern already
-   used for `workstation` (see `MIGRATION-pi-to-workstation.md` in the old `Workstation`
-   repo for that precedent).
-3. Once live: fill in this file with verified specs, flip `nodes/INDEX.md` status to
-   `active`, add `nodes/futro/{status,inventory}.md` + `setup/`, add
-   `infrastructure/health-futro.sh`.
+Full plan (Linux version, partition scheme, human install steps, remote completion by
+`raspi`'s Claude Code session, and validation checks): see
+[`setup-plan.md`](setup-plan.md).

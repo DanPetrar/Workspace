@@ -42,41 +42,17 @@ live during install, don't guess from this doc.
 
 ## 3. Human install prep (step by step)
 
-### 3.1 Prepare install media
-1. Download the Debian 13 "trixie" netinst amd64 ISO: https://www.debian.org/distrib/netinst
-2. Write to a USB stick: `dd if=debian-13.x.x-amd64-netinst.iso of=/dev/sdX bs=4M status=progress oflag=sync` (or Etcher/Rufus). Double-check `/dev/sdX` is the USB drive before running `dd`.
+**Full detail (screen-by-screen, every command, written for someone with no Linux
+experience):** see [`install-guide.md`](install-guide.md). Summary of what it covers:
+prepare a USB installer (balenaEtcher), boot the Futro and note UEFI vs. Legacy/BIOS,
+run the Debian graphical installer end-to-end (hostname `futro`, user account, the
+partition scheme from section 2 above entered manually screen-by-screen, SSH-server-only
+software selection, GRUB), first-boot verification (`ip addr`, `systemctl status ssh`),
+and the one unavoidable physical step — bootstrapping SSH trust by pasting the Pi's
+public key into Futro's `authorized_keys` locally.
 
-### 3.2 Boot the Futro from USB
-1. Insert the USB stick, power on, press the boot-menu key at startup (F12 is typical on Fujitsu Futro — check the boot splash if not).
-2. Select the USB drive. Note whether the boot menu offers a UEFI or legacy entry for it — this decides the partition scheme in section 2.
-
-### 3.3 Run the Debian installer
-1. Choose the plain "Install" option (text installer — no desktop needed, this machine runs headless).
-2. Language / locale / keyboard: standard choices (English/US or as preferred).
-3. **Hostname: `futro`** — matches the node name already reserved in `nodes/INDEX.md`. Domain: leave blank.
-4. Network: DHCP to get through the installer. Note the assigned IP — after install, either get a router-side static reservation for it or keep DHCP with a reservation. Record the final IP in `nodes/INDEX.md` once known; this plan can't fabricate an address that hasn't been assigned.
-5. Create a personal user account — pick a username and note it down; this is the SSH target going forward (parallel to `dan-linux` on `workstation`).
-6. Partitioning: manual/guided-with-override, per the table in section 2.
-7. Software selection (tasksel): select only **SSH server** + **standard system utilities**. Deselect any desktop environment.
-8. Finish, remove the USB, reboot.
-
-### 3.4 First boot — confirm reachability
-1. Log in locally once (keyboard + monitor).
-2. `ip addr` — confirm it matches the IP noted in 3.3.4.
-3. `systemctl status ssh` — confirm the SSH server is active.
-
-### 3.5 Bootstrap SSH key access (the one step that must happen physically)
-The Pi can't SSH in before a key is trusted there, so this leg is manual, at the machine:
-1. On the Pi: `cat ~/.ssh/id_ed25519.pub` — copy that line.
-2. On the Futro (local session): 
-   ```
-   mkdir -p ~/.ssh && chmod 700 ~/.ssh
-   echo "<paste the Pi's pubkey line>" >> ~/.ssh/authorized_keys
-   chmod 600 ~/.ssh/authorized_keys
-   ```
-3. From the Pi: `ssh <futro-user>@<futro-ip> 'echo ok'` — must succeed with no password prompt.
-
-**Human's part ends here.** Everything below runs remotely from the Pi's Claude Code session over that connection.
+**Human's part ends once that SSH bootstrap succeeds.** Everything below runs remotely
+from the Pi's Claude Code session over that connection.
 
 ## 4. Pi-Claude completes the rest
 

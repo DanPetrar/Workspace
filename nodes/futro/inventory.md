@@ -25,13 +25,13 @@ machines by hand as needed).
 - `~/boards.json` — **not a local copy.** Symlinked to an `sshfs` mount
   (`~/pi-raspi-mnt`, backed by a hard link at `raspi:~/shared/boards.json`) so raspi
   stays the single writable authority. Confirmed both read and write-through live.
+  Mount is a systemd service, `/etc/systemd/system/sshfs-boards.service`
+  (`Restart=on-failure`, `After=network-online.target`, enabled at boot) — **verified
+  to survive a real reboot** 2026-07-22 (mounted automatically, `flash_guard.py list`
+  read the shared catalog correctly with no manual step).
 - `dialout` group added to `dan-futro` for serial port access once hardware is
   plugged into futro's own USB ports
 - **Verified end-to-end 2026-07-22:** `bash ~/ZaxModbus/arduino/build_s3zero.sh
   --build-only` compiled clean (1,138,899 bytes, 57%) using the real project build
   script, and `flash_guard.py list` read the live shared catalog (17 boards, matching
   raspi exactly)
-
-Known gap: the `sshfs` mount is session-only right now (not yet in `fstab`/a
-persistent unit) — needs remounting after a futro reboot. Not automated yet since
-this was a same-day add; revisit if that becomes an actual friction point.

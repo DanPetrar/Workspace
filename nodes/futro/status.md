@@ -30,7 +30,6 @@ Bring-up completed 2026-07-22, run from `raspi`'s Claude Code session per
 
 ## Open items
 
-- `sshfs` mount for `boards.json` is session-only (not yet persistent across a futro
-  reboot) — see `inventory.md`.
-- `raspi`'s pre-existing `mosquitto.service` failure (since 2026-06-26) is unrelated to
-  this node — see `nodes/raspi/status.md`.
+- None from bring-up or the toolchain-parity add. `raspi`'s pre-existing
+  `mosquitto.service` failure (since 2026-06-26) is unrelated to this node — see
+  `nodes/raspi/status.md`.

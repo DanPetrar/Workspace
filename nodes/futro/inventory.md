@@ -1,20 +1,37 @@
 # futro — Inventory
 
-Verified live 2026-07-22, at close of bring-up. Update whenever a tool is
-installed/removed/reconfigured.
+Verified live 2026-07-22. Update whenever a tool is installed/removed/reconfigured.
 
 | Tool | Version |
 |---|---|
 | Git | 2.47.3 |
 | Python 3 | 3.13.5 |
+| Node.js | 20.20.2 (NodeSource, required by ponytail's Claude Code hooks) |
 | Claude Code | 2.1.217 |
 | GitHub CLI (`gh`) | 2.96.0 |
+| `arduino-cli` | 1.4.1, ESP32 core 3.3.7 — matches raspi |
+| ESP-IDF | v6.0.1 (`~/esp/esp-idf`) — matches raspi |
+| `esptool` | via the ESP32 arduino-cli core (bundled, not separate), same as raspi |
 
-Node.js/npm are **not installed** — nothing in the coordinator role has needed them so
-far; add if a project requires it.
+## Dev-toolchain parity (added 2026-07-22, same day as bring-up)
 
-## Deliberately absent (role boundary — see `setup-plan.md` section 4.5)
+Reverses the original "raspi-only" framing — see `setup-plan.md` amendment for the
+full reasoning (futro is co-located with the bench; boards/USB cables move between
+machines by hand as needed).
 
-`arduino-cli`, `esptool.py`, `~/boards.json`, `flash_guard.py` — all testing-station
-tooling, stays on `raspi` only. Confirmed absent as part of the 9-point validation
-checklist.
+- `~/Arduino/libraries/` — copied from raspi (ZaxCommon, ArduinoJson, PubSubClient,
+  ModbusMaster, OneWire, DallasTemperature, Adafruit_NeoPixel)
+- `flash_guard.py` + `identity_guard.py` — copied/symlinked matching raspi's layout
+- `~/boards.json` — **not a local copy.** Symlinked to an `sshfs` mount
+  (`~/pi-raspi-mnt`, backed by a hard link at `raspi:~/shared/boards.json`) so raspi
+  stays the single writable authority. Confirmed both read and write-through live.
+- `dialout` group added to `dan-futro` for serial port access once hardware is
+  plugged into futro's own USB ports
+- **Verified end-to-end 2026-07-22:** `bash ~/ZaxModbus/arduino/build_s3zero.sh
+  --build-only` compiled clean (1,138,899 bytes, 57%) using the real project build
+  script, and `flash_guard.py list` read the live shared catalog (17 boards, matching
+  raspi exactly)
+
+Known gap: the `sshfs` mount is session-only right now (not yet in `fstab`/a
+persistent unit) — needs remounting after a futro reboot. Not automated yet since
+this was a same-day add; revisit if that becomes an actual friction point.

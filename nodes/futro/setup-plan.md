@@ -1,14 +1,39 @@
 # futro — Setup Plan
 
-Plan only — the Futro is not yet acquired, nothing here has been executed. Supersedes
-the "Bring-up" stub in `nodes/futro/hardware.md`, which now points here.
+**Bring-up completed 2026-07-22** — see `nodes/futro/status.md` for the executed
+result. This file is kept as the historical plan; sections below are marked where
+reality diverged.
 
-**Role-transfer decision this plan implements:** per the updated `role` field in
+## Amendment 2026-07-22 — dev-toolchain split reversed (Fable-reviewed)
+
+Section 4.5 below and validation check #8 in section 5 originally made
+arduino-cli/esptool/`flash_guard.py`/`boards.json` **raspi-exclusive**, reasoning that
+testing-station work is pinned to physical cabling. **User direction 2026-07-22:**
+futro is physically co-located next to the bench, so that reasoning no longer holds —
+boards/USB cables can be plugged into whichever machine is doing that day's work.
+Futro now gets full software-toolchain parity with raspi; raspi keeps every
+capability it has today (nothing removed), narrowing only in day-to-day practice as
+the machine that holds the permanent bench (Units A-D, RS-485 bus).
+
+This was reviewed via a Fable-model pass (same review style as the original Workspace
+structure) before being acted on — see that review's reasoning in the session it ran.
+Net effect: section 4.5's "do not install" list is reversed (now: do install, matching
+raspi's versions); check #8 is superseded (see section 5 note); `boards.json` becomes
+network-shared (`sshfs` mount from raspi) rather than raspi-exclusive, so there's
+never two independently-writable copies. Full corresponding updates: `nodes/INDEX.md`,
+`nodes/futro/hardware.md`, `nodes/raspi/hardware.md`, `infrastructure-interaction.md`
+rules 2-3.
+
+Supersedes the "Bring-up" stub in `nodes/futro/hardware.md`, which now points here.
+
+**Role-transfer decision this plan implements (as originally written — see the
+2026-07-22 amendment above for what changed):** per the updated `role` field in
 `nodes/INDEX.md`, the Futro takes over the coordinator role in full — every task
 currently run by the Pi's Claude Code session, except the physically-tied
 testing-station work (USB/serial/GPIO/RS-485 bench hardware, Arduino toolchain,
 `flash_guard.py`/`boards.json`), which stays on `raspi` because it's pinned to
-physical cabling, not compute.
+physical cabling, not compute. **The toolchain-exclusivity part of this paragraph is
+superseded — see the amendment above.**
 
 ---
 
@@ -87,9 +112,16 @@ git config --global init.defaultBranch main
 `ZaxModbus`, `Workstation`, `Workspace`, `EnergyCalibrator`, `EmonESP_MultiIO`,
 `EmonESP_MultiIO-V001`, `EmonESP_MultiIO-V002`, `ZaxEnergySurvey`, `ArduinoIDE_project`.
 
-**Do not install:** Arduino IDE / `arduino-cli` toolchain, `esptool`, `flash_guard.py`,
+~~**Do not install:** Arduino IDE / `arduino-cli` toolchain, `esptool`, `flash_guard.py`,
 `boards.json`, or any RS-485/serial tooling. These stay `raspi`-only — testing-station
-work is pinned to physical cabling, not compute, and doesn't transfer.
+work is pinned to physical cabling, not compute, and doesn't transfer.~~
+
+**SUPERSEDED 2026-07-22 — see the amendment at the top of this file.** Futro is
+co-located with the bench, so this exclusivity was reversed: `arduino-cli` (matching
+raspi's version) + the ESP32 core + ESP-IDF + Arduino libraries + `flash_guard.py` are
+now installed on futro too. `boards.json` is the one exception that isn't a plain
+copy — it stays single-authority on raspi, reached via an `sshfs` mount, so there's
+never two independently-writable catalogs.
 
 ### 4.6 SSH — both directions
 - **Futro → workstation:** from the Pi (already has passwordless access), append the Futro's new public key to workstation's `authorized_keys`: `ssh ws 'echo "<futro pubkey>" >> ~/.ssh/authorized_keys'`. Add a `ws` host block to Futro's `~/.ssh/config` (`HostName 192.168.110.11`, `User dan-linux`), mirroring the Pi's existing one. Confirm `ssh ws 'echo ok'` from Futro, key-based, no prompt.
@@ -116,7 +148,7 @@ Concrete, run in order, each with an unambiguous pass/fail:
 5. **Claude Code installed:** `claude --version` succeeds, version ≥ the Pi's version at time of bring-up (compare live — don't hardcode `2.1.216`, it will be stale by then).
 6. **Fresh-session context test:** start a new Claude Code session on Futro, no prior conversation. Prompt: "What is the current state of the ZaxModbus project, and what's the bench fleet's firmware version?" PASS only if the answer cites specifics traceable to files on disk (a version string from `ZaxModbus`'s own docs or `Workspace/nodes/*/status.md`), not something only knowable from memory. If it hedges or has to ask for the info, FAIL — `CLAUDE.md`/repo docs aren't sufficient yet.
 7. **Reverse testing-station round-trip:** from Futro, `ssh bench 'python3 ~/flash_guard.py --help'` (or another harmless read-only call) returns Pi-side output. Confirms Futro can direct testing-station work without local tooling. FAIL if unreachable or if Futro needed local tooling to get there.
-8. **Role boundary held (negative check):** on Futro, `which arduino-cli esptool.py 2>&1; ls ~/boards.json 2>&1` — all should report "not found." FAIL if any are present.
+8. ~~**Role boundary held (negative check):** on Futro, `which arduino-cli esptool.py 2>&1; ls ~/boards.json 2>&1` — all should report "not found." FAIL if any are present.~~ **SUPERSEDED 2026-07-22** — this check tested for the opposite of the current target state. See the amendment at the top of this file. Replacement check: `arduino-cli version` + `arduino-cli core list` (expect `esp32:esp32` installed, matching raspi's version) and `ls -la ~/boards.json` (expect a symlink into an `sshfs` mount of raspi's copy, not a local file).
 9. **Workspace docs closed out:** `nodes/futro/hardware.md` has verified (non-"unverified") specs; `nodes/futro/status.md`, `inventory.md`, `setup/` exist; `nodes/INDEX.md` status for `futro` is `active`; `infrastructure/health-futro.sh` exists. FAIL if any are missing.
 
 All 9 must PASS before treating the coordinator-role transfer as actually complete —

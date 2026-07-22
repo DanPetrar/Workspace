@@ -20,8 +20,14 @@ live (`lscpu`, `free -h`, `lsblk -d -o NAME,SIZE,MODEL`, `/sys/firmware/efi`,
 
 - Session coordinator (runs Claude Code) — see `nodes/INDEX.md`. Took over the full
   coordinator role from `raspi` on this bring-up.
-- No physical bench hardware attached (no USB/serial/GPIO/RS-485) — that work stays on
-  `raspi` (testing station), reached via `ssh bench`.
+- **Full dev-toolchain parity with raspi** (added 2026-07-22, same day as bring-up —
+  see `setup-plan.md` amendment): arduino-cli + ESP32 core + ESP-IDF + Arduino
+  libraries + `flash_guard.py`, matching raspi's versions. `boards.json` stays
+  single-authority on raspi, reached via `sshfs` mount — never a local copy.
+- Co-located with the permanent bench — boards/USB cables can be moved to futro's own
+  ports for local flash/serial-monitor work. The permanent bench itself (Units A-D,
+  RS-485 bus) stays wired to raspi; drive it remotely via `ssh bench` when it's not
+  physically moved.
 
 ## Bring-up
 

@@ -9,6 +9,17 @@ _Verified live 2026-07-21._ The old file was last verified 2026-06-03 and had dr
 in three ways found during this rewrite (see corrections below) — re-verify this file
 periodically the same way, don't assume it stays accurate on its own.
 
+## Amendment 2026-07-22 — raspi/futro dev-toolchain split reversed
+
+Rules 2 and 3 below originally read as a strict raspi-only split (mirroring
+`nodes/futro/setup-plan.md` section 4.5 at the time). **User direction 2026-07-22:**
+futro gets full software toolchain parity with raspi (arduino-cli, ESP-IDF,
+`flash_guard.py`) — futro is co-located next to the physical bench, so USB/serial
+boards can be plugged into whichever machine is doing that day's work. raspi keeps
+every capability it has today; nothing is removed. See `nodes/futro/setup-plan.md`
+section 4.5 amendment and `nodes/futro/hardware.md`/`nodes/raspi/hardware.md` for the
+full detail — this file's rules 2/3 are updated to match, not silently rewritten.
+
 ## Corrections vs. the old `INFRASTRUCTURE.md`
 
 1. **Pi `mosquitto.service` is not running.** The old doc listed it ✅ active; live
@@ -73,11 +84,17 @@ LEGACY ZAX UNITS (A/B/C)                 ZAXMODBUS FLEET (12 boards)          BE
 
 1. **New permanent/production service → the Workstation node**, via `ssh ws`. Update
    `nodes/workstation/status.md` in the same commit.
-2. **New prototype / serial-attached work → the raspi node.** USB serial, GPIO, RS-485
-   bench work stays local until it's permanent — this is a physical-cabling constraint,
-   not a preference (see `nodes/raspi/hardware.md`).
-3. **Firmware build & flash stay on raspi** (Arduino toolchain, `flash_guard.py` +
-   `/home/pi/boards.json`). No board is attached to workstation.
+2. **Serial-attached work → whichever node the hardware is physically plugged into.**
+   USB serial, GPIO, RS-485 work needs the board physically connected — raspi holds
+   the permanent bench (Units A-D, RS-485 bus); futro (co-located) can take a board's
+   USB cable for ad-hoc local dev. This is still a physical-cabling constraint, just no
+   longer a raspi-exclusive one (amended 2026-07-22, see above).
+3. **Firmware build works on either raspi or futro** (both carry the Arduino toolchain
+   + ESP-IDF). **Flashing/serial-monitor works on whichever node the board is currently
+   plugged into.** `boards.json` stays single-authority on raspi
+   (`/home/pi/boards.json`) — futro's `flash_guard.py` reaches it over an `sshfs`
+   mount, never a local copy, so the catalog never has two independently-writable
+   copies (amended 2026-07-22, see above).
 4. **Brokers:** WS broker is the permanent one. The Pi broker exists only for the
    legacy ZAX field units — and is currently down (correction 1); don't add new
    publishers to it regardless of whether it's fixed.

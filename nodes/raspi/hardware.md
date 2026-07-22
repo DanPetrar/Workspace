@@ -21,8 +21,14 @@ this file's numbers are the verified ones.
 
 ## Role
 
-- Session coordinator (runs Claude Code) — see `nodes/INDEX.md`
-- Testing station: physically cabled to bench hardware (ESP32 boards via USB/serial,
-  RS-485 adapter for Modbus, GPIO) for ZaxModbus/EnergyCalibrator/EmonESP firmware
-  development and flashing. This role is tied to the physical cabling and does not
-  transfer to another machine without rewiring.
+- Testing station: physically cabled to the permanent bench (ESP32 boards via
+  USB/serial, RS-485 adapter for Modbus, GPIO) for ZaxModbus/EnergyCalibrator/EmonESP
+  firmware development and flashing. This role is tied to the physical cabling and
+  does not transfer to another machine without rewiring.
+- **Coordinator role transferred to `futro` 2026-07-22** — raspi no longer runs the
+  primary Claude Code coordination session, but **keeps every capability it had
+  before** (Arduino toolchain, `flash_guard.py`, `boards.json`, ESP-IDF); nothing was
+  removed. `futro` is co-located and got full dev-toolchain parity the same day (see
+  `nodes/futro/setup-plan.md` amendment) — boards/USB cables move between the two
+  machines by hand as needed. `boards.json` (`/home/pi/boards.json`) stays
+  single-authority here; futro reaches it via `sshfs`, never a local copy.

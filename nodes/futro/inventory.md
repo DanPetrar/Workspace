@@ -35,3 +35,22 @@ machines by hand as needed).
   --build-only` compiled clean (1,138,899 bytes, 57%) using the real project build
   script, and `flash_guard.py list` read the live shared catalog (17 boards, matching
   raspi exactly)
+
+## Compile-time comparison vs. raspi (2026-07-22)
+
+Same `--build-only` build scripts, real projects, artifacts reverted after each run
+(`git checkout --`). "Cold" = first compile of that board target this session (fresh
+object cache); "warm" = immediate rebuild, no source changes — the realistic
+edit/recompile dev-loop case.
+
+| Project (board) | raspi cold | raspi warm | futro cold | futro warm | warm speedup |
+|---|---|---|---|---|---|
+| ZaxModbus (S3-Zero) | — | 2m09.3s | — | 0m36.1s | 3.6x |
+| EnergyCalibrator (S3-Zero) | 3m15.7s | 1m05.5s | 1m47.1s | 0m34.2s | 1.9x |
+| EmonESP_MultiIO-V002 (classic ESP32) | 1m09.9s | 1m06.3s | 1m45.5s | 0m33.9s | 2.0x |
+
+futro is consistently ~2-3.6x faster once the object cache is warm (the normal
+day-to-day case). On a genuinely cold compile (new board target, no cached objects)
+the gap narrows and futro was slower once (EmonESP classic-ESP32 target) — raspi's
+cache is warmed by months of real use, which partly offsets its weaker CPU on a
+first-ever compile of a given target.

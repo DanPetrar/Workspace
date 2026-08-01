@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# health-futro.sh — start-of-session health check for the Futro coordinator (192.168.110.8).
+# health-futro.sh — start-of-session health check for the Futro coordinator (192.168.20.226).
 # Run locally on the Futro:  bash infrastructure/health-futro.sh
 # See INFRASTRUCTURE.md / nodes/futro/status.md for what should be in place here.
 set -u

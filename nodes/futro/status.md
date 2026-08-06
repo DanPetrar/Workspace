@@ -80,10 +80,11 @@ project, and what's the bench fleet's firmware version?"*, with a pass defined a
 specific version string traceable to a file on disk, no hedging. **Still open, waiting
 on the user.**
 
-**New finding, not previously known:** futro's `dan-futro` user has **no passwordless
-sudo** (`sudo -n -l` → "a password is required"). This didn't block anything in this
-session (nothing here needed root on futro), but any future task needing
-`sudo systemctl`/`apt`/etc. on futro will need the user at an interactive terminal.
+**Fixed same day:** futro's `dan-futro` user had **no passwordless sudo** (`sudo -n -l`
+→ "a password is required" when first checked). User added
+`/etc/sudoers.d/010_dan-futro-nopasswd` (`dan-futro ALL=(ALL) NOPASSWD: ALL`) via
+`visudo`, matching raspi's own `010_pi-nopasswd` setup exactly. Verified:
+`ssh futro 'sudo -n whoami'` → `root`, no prompt.
 
 **Also done today:** `boards.json` nightly off-box backup cron added (raspi →
 Workstation, `00:15` daily) — the "worth doing regardless" item from the section above

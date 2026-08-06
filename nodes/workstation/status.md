@@ -16,6 +16,7 @@ entirely about this node). Service states re-verified live 2026-08-06 via `ssh w
 | `cal_collector` | EnergyCalibrator bench data → SQLite |
 | `cal_reports` | Session UI + PDF reports — http://192.168.20.11:8080 |
 | `cal-parser` | EnergyCalibrator → InfluxDB |
+| `chrony` | NTP server for bench-LAN dev range `.64`-`.255` (added 2026-08-06) |
 
 ## Quick reference
 
@@ -29,6 +30,7 @@ entirely about this node). Service states re-verified live 2026-08-06 via `ssh w
 | ZaxModbus parser | `/opt/zaxmodbus-parser/zaxmodbus_parser.py` |
 | Grafana password reset | stop `grafana-server` → `grafana cli --homepath /usr/share/grafana admin reset-admin-password zaxenergy2026` → start it again |
 | InfluxDB CLI org | always `--org zax` |
+| NTP server | `192.168.20.11:123` (UDP) — allowed from `192.168.20.64/26` + `192.168.20.128/25` only |
 
 ## Recent history (carried over, unverified beyond what's stated)
 

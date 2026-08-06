@@ -1,10 +1,9 @@
 # Network migration + futro coordinator handoff — completion plan
 
-**Status:** Implementation (T1-T16) complete, 2026-08-06. All 9 checklist items in
-`setup-plan.md` §5 re-run and passing except check 6 (fresh-session context test),
-which needs the user to run manually — see `nodes/futro/status.md`'s 2026-08-06 entry
-for the full checklist results and the one new finding (futro has no passwordless
-sudo). See section 5 below for what's still open.
+**Status:** CLOSED, 2026-08-06. Implementation (T1-T16) complete, all 9 checklist items
+in `setup-plan.md` §5 re-run and passing — the coordinator-role transfer from raspi to
+futro is now verifiably complete. See `nodes/futro/status.md`'s 2026-08-06 entry for
+the full checklist results. See section 5 below for remaining (non-blocking) follow-ups.
 
 ---
 
@@ -357,12 +356,17 @@ All 16 tasks done. Summary of what changed:
   broker target) — documented as a correction, not silently overwritten.
 - **Pi**: nightly `boards.json` → Workstation backup cron added and verified
   byte-identical.
-- **9-point futro checklist**: 8/9 pass. Check 6 (fresh-session context test) needs the
-  user — see `nodes/futro/status.md`.
-- **New finding**: futro's user has no passwordless sudo — didn't block anything today,
-  flagged for future tasks that need `sudo` there.
+- **9-point futro checklist**: **9/9 pass.** Check 6 turned out not to need a human at
+  the keyboard after all — `claude -p "<prompt>"` starts a genuinely fresh, non-resumed
+  session, which satisfies the check. Ran it on futro; it correctly answered from disk
+  alone (cited `Doc/gap-recovery-plan.md`, `Doc/errors-history.md`, `boards.json`,
+  current firmware v1.1.11, full per-unit version table). See `nodes/futro/status.md`.
+- **futro's user had no passwordless sudo** — fixed same day (user added
+  `/etc/sudoers.d/010_dan-futro-nopasswd` via `visudo`, matching raspi's own setup;
+  verified `sudo -n whoami` → `root`).
 
-**Still open:** check 6 (user action), and the previously-surfaced-and-deferred
-questions — full `boards.json` authority relocation (tied to the still-open "futro as
-primary dev machine" evaluation) and whether to eventually install Claude Code on the
-Workstation itself.
+**Coordinator-role transfer from raspi to futro is now verifiably complete** — all 9 of
+`setup-plan.md` §5's checks pass. **Still open, not blocking:** the
+previously-surfaced-and-deferred questions — full `boards.json` authority relocation
+(tied to the still-open "futro as primary dev machine" evaluation) and whether to
+eventually install Claude Code on the Workstation itself.

@@ -69,16 +69,20 @@ its `~/.ssh/config` `ws`/`bench` aliases were still on the old subnet, breaking 
 | 3 | `gh auth status` | ✅ PASS — DanPetrar, protocol ssh |
 | 4 | `git fetch`, all 9 repos | ✅ PASS — no prompts/errors |
 | 5 | Claude Code ≥ raspi's version | ✅ PASS (after self-update: futro was 2.1.217, behind raspi's 2.1.223 — ran `claude update`, now 2.1.223 = raspi's) |
-| 6 | Fresh-session context test | ⏳ **Manual step — needs the user**, see note below |
+| 6 | Fresh-session context test | ✅ PASS (2026-08-06, see note below) |
 | 7 | Reverse round-trip `futro→bench→flash_guard.py --help` | ✅ PASS |
 | 8 | Toolchain parity (replacement check) | ✅ PASS — arduino-cli 1.4.1 + esp32:esp32 core, `boards.json` is a live symlink into the sshfs mount |
 | 9 | Workspace docs closed out | ✅ PASS (after `git pull` on all 9 repos, which had not been pulled since 2026-07-22 bring-up — up to 34 commits behind on some) |
 
-**Check 6 cannot be run by Claude Code itself** — it requires a brand-new (non-resumed)
-Claude Code session on futro, asked *"What is the current state of the ZaxModbus
-project, and what's the bench fleet's firmware version?"*, with a pass defined as a
-specific version string traceable to a file on disk, no hedging. **Still open, waiting
-on the user.**
+**Check 6, corrected finding:** originally assumed this needed a human at the keyboard
+opening a fresh interactive session. It doesn't — `claude -p "<prompt>"` starts a
+genuinely fresh, non-resumed session (no `--resume`/`--continue`), which satisfies the
+check's actual requirement. Ran on futro via `ssh futro 'claude -p "What is the current
+state of the ZaxModbus project, and what's the bench fleet's firmware version?"'`.
+**Result: PASS** — cited `Doc/gap-recovery-plan.md`, `Doc/errors-history.md`, and
+`boards.json` (read live through the sshfs mount) by name; gave the current firmware
+(v1.1.11) and a full per-unit version/last-flash table for all 12+ boards; no hedging,
+no request for missing context.
 
 **Fixed same day:** futro's `dan-futro` user had **no passwordless sudo** (`sudo -n -l`
 → "a password is required" when first checked). User added
@@ -92,9 +96,9 @@ is no longer open, independent of whether authority ever moves off raspi.
 
 ## Open items
 
-- **Check 6 above — fresh-session context test, needs the user.** Once confirmed, the
-  coordinator-role transfer can be treated as fully, verifiably complete per
-  `setup-plan.md`'s own bar (all 9 must pass).
+**All 9 checklist items now PASS (2026-08-06) — the coordinator-role transfer from
+raspi to futro is verifiably complete per `setup-plan.md`'s own bar.**
+
 - Validation of the development-machine role — see the section above.
 - ESP-IDF is installed on **both** machines (2.8 GB `~/esp` + 4.8 GB `~/.espressif` each)
   purely because nine Arduino build scripts `source ~/esp/esp-idf/export.sh` to get

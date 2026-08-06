@@ -10,9 +10,9 @@ Roles and reachability are **not hardcoded here** — see [`nodes/INDEX.md`](nod
 the single source of truth. Today that resolves to:
 
 - **Coordinator** (writes task specs, reviews results, maintains fleet-wide docs) —
-  `raspi`
-- **Executor(s)** (implement tasks, build, test, commit results) — `workstation` (and
-  `futro`, once active)
+  `futro` (took over from `raspi` 2026-07-22 — see `nodes/INDEX.md`)
+- **Executor(s)** (implement tasks, build, test, commit results) — `workstation` and
+  `raspi` (physically-tied testing-station work: USB/serial/GPIO/RS-485)
 
 **The user works across multiple machines.** Each node's Claude Code is a separate
 instance with no shared memory — task specs must be self-contained so an executor node
@@ -21,7 +21,7 @@ can run them without prior context.
 ### Control model
 
 The coordinator node has **direct SSH control** of the others (e.g. `ssh ws` →
-`dan-linux@192.168.110.11`, key-based, passwordless sudo) — this is the **default**
+`dan-linux@192.168.20.11`, key-based, passwordless sudo) — this is the **default**
 path; the coordinator runs commands remotely rather than writing a task spec.
 
 **The GitHub task-spec hand-off below is the fallback** — used for work that must run

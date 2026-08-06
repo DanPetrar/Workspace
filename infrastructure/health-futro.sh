@@ -20,11 +20,19 @@ if gh auth status >/dev/null 2>&1; then ok "gh authenticated"; else bad "gh NOT 
 if ssh -o BatchMode=yes -o ConnectTimeout=5 ws 'echo ok' >/dev/null 2>&1; then ok "ssh ws reachable"; else bad "ssh ws NOT reachable"; fi
 if ssh -o BatchMode=yes -o ConnectTimeout=5 bench 'echo ok' >/dev/null 2>&1; then ok "ssh bench reachable"; else bad "ssh bench NOT reachable"; fi
 
-# Role boundary — testing-station tooling must NOT be here
-if command -v arduino-cli >/dev/null 2>&1 || command -v esptool.py >/dev/null 2>&1 || [ -f "$HOME/boards.json" ]; then
-  bad "testing-station tooling present on futro (role boundary violated)"
+# Toolchain parity — futro is supposed to have full dev-toolchain parity with raspi
+# (setup-plan.md amendment 2026-07-22; supersedes the old negative role-boundary check).
+if command -v arduino-cli >/dev/null 2>&1 && arduino-cli core list 2>/dev/null | grep -q '^esp32:esp32'; then
+  ok "arduino-cli + esp32:esp32 core present ($(arduino-cli version 2>/dev/null | head -1))"
 else
-  ok "role boundary held (no arduino-cli/esptool/boards.json)"
+  bad "arduino-cli / esp32:esp32 core missing (toolchain parity not met)"
+fi
+if [ -L "$HOME/boards.json" ]; then
+  ok "boards.json is a symlink (sshfs-backed, single-authority on raspi)"
+elif [ -f "$HOME/boards.json" ]; then
+  bad "boards.json is a local file, not a symlink into the sshfs mount"
+else
+  bad "boards.json missing"
 fi
 
 # Disk free on /

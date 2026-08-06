@@ -12,12 +12,12 @@ bad()  { printf 'FAIL  %s\n' "$1"; fails=$((fails+1)); }
 echo "== Pi health ($(hostname), $(date '+%Y-%m-%d %H:%M')) =="
 
 # Expected services
-for svc in mosquitto zax_directory; do
-  if systemctl is-active --quiet "$svc"; then ok "$svc active"; else bad "$svc NOT active"; fi
-done
+if systemctl is-active --quiet zax_directory; then ok "zax_directory active"; else bad "zax_directory NOT active"; fi
+# mosquitto here is local dev/test-only (no production consumer, see INFRASTRUCTURE.md) — WARN not FAIL if stopped.
+if systemctl is-active --quiet mosquitto; then ok "mosquitto active (local dev/test-only)"; else warn "mosquitto NOT active (local dev/test-only, non-critical)"; fi
 
-# Broker port
-if ss -tln 2>/dev/null | grep -q ':1883 '; then ok "broker listening :1883"; else bad "broker :1883 not listening"; fi
+# Broker port (informational — non-critical broker)
+if ss -tln 2>/dev/null | grep -q ':1883 '; then ok "broker listening :1883"; else warn "broker :1883 not listening (local dev/test-only, non-critical)"; fi
 
 # Disk free on /
 read -r used_pct avail < <(df -h / | awk 'NR==2{gsub("%","",$5); print $5, $4}')

@@ -1,8 +1,10 @@
 # Network migration + futro coordinator handoff — completion plan
 
-**Status:** Stage 2 (Fable: task breakdown + implementation/test plan) complete,
-2026-08-06 — verified against live state, not just Stage 1's summary. Awaiting approval.
-No implementation until approved.
+**Status:** Implementation (T1-T16) complete, 2026-08-06. All 9 checklist items in
+`setup-plan.md` §5 re-run and passing except check 6 (fresh-session context test),
+which needs the user to run manually — see `nodes/futro/status.md`'s 2026-08-06 entry
+for the full checklist results and the one new finding (futro has no passwordless
+sudo). See section 5 below for what's still open.
 
 ---
 
@@ -333,9 +335,34 @@ above, stop and re-diagnose before asking the user to spend time on the manual c
 
 ---
 
-## 5. Next step
+## 5. Final state (2026-08-06)
 
-Awaiting approval of the Stage 2 plan above. Once approved, Sonnet implements T1-T16 in
-the phase order given (Phase 0: T2/T3/T4/T5/T15 — no live-service risk; Phase 1: T1,
-T6-T13 — doc rewrites; Phase 2: T14 checklist re-run, then T16 closeout), flagging
-check 6 as a manual step for the user rather than marking it complete unilaterally.
+All 16 tasks done. Summary of what changed:
+
+- **futro**: SSH config fixed (both new IPs verified against independently-confirmed
+  host key fingerprints, not blind-trusted); all 9 repos pulled (some were up to 34
+  commits behind — never pulled since 2026-07-22 bring-up); `boards.json` sshfs mount
+  restored (needed a manual unmount/reconnect beyond the config fix — systemd's own
+  `Restart=on-failure` recovered it without needing sudo); `hardware.md` IP fixed;
+  Claude Code self-updated to match raspi's version.
+- **Workstation**: `INFRASTRUCTURE.md`, `COORDINATION.md`, `inventory.md`, `STATUS.md`,
+  and the repo-tracked `zax_parser.py` all fixed — both IPs and the underlying
+  architecture claim (no Pi-relay hop has existed since 2026-06-24). Committed + pushed
+  (`b7305e4`).
+- **Workspace**: `infrastructure-interaction.md`, root `COORDINATION.md`,
+  `nodes/workstation/status.md`, `nodes/futro/hardware.md`, `nodes/futro/status.md`,
+  `nodes/raspi/status.md`, and both `health-{pi,futro}.sh` scripts fixed. Also found
+  and fixed: `infrastructure-interaction.md`'s own 2026-07-21 "verification" had already
+  been wrong (checked Pi mosquitto's status but never re-checked `zax-parser`'s actual
+  broker target) — documented as a correction, not silently overwritten.
+- **Pi**: nightly `boards.json` → Workstation backup cron added and verified
+  byte-identical.
+- **9-point futro checklist**: 8/9 pass. Check 6 (fresh-session context test) needs the
+  user — see `nodes/futro/status.md`.
+- **New finding**: futro's user has no passwordless sudo — didn't block anything today,
+  flagged for future tasks that need `sudo` there.
+
+**Still open:** check 6 (user action), and the previously-surfaced-and-deferred
+questions — full `boards.json` authority relocation (tied to the still-open "futro as
+primary dev machine" evaluation) and whether to eventually install Claude Code on the
+Workstation itself.

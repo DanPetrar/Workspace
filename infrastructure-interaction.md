@@ -5,9 +5,19 @@ facts (what each machine runs) live in `nodes/<node>/status.md`; this file owns 
 **cross-node** picture — who talks to whom, and the standing rules for where new work
 goes.
 
-_Verified live 2026-07-21._ The old file was last verified 2026-06-03 and had drifted
-in three ways found during this rewrite (see corrections below) — re-verify this file
-periodically the same way, don't assume it stays accurate on its own.
+_Verified live 2026-08-06._ The old file was last verified 2026-06-03 and had drifted
+in three ways found during the 2026-07-21 rewrite (see corrections below) — re-verify
+this file periodically the same way, don't assume it stays accurate on its own.
+
+**2026-08-06 correction:** the 2026-07-21 rewrite's own "Pi broker (currently FAILED)"
+framing was itself already wrong when written — `zax-parser` has connected to
+`BROKER_HOST="localhost"` on the Workstation since 2026-06-24, a month before that
+verification pass, which checked Pi mosquitto's `systemctl` status but never re-checked
+`zax-parser`'s actual broker target. There is no Pi-relay hop in the live data path and
+hasn't been since 2026-06-24 — confirmed again today alongside the 192.168.110.x →
+192.168.20.x network migration cleanup (also fixed here: `zaxmodbus-parser` was found to
+independently confirm the same thing — both parsers connect to `localhost:1883` on the
+Workstation, nothing subscribes to Pi's broker).
 
 ## Amendment 2026-07-22 — raspi/futro dev-toolchain split reversed
 
@@ -36,49 +46,54 @@ full detail — this file's rules 2/3 are updated to match, not silently rewritt
 ## Data flow
 
 ```
-LEGACY ZAX UNITS (A/B/C)                 ZAXMODBUS FLEET (12 boards)          BENCH (Unit D, cal_F07F8C)
-  zax_E47730/E55008.../zax_3C boards       zax_<mac> x12                        box CTs + SDM630 ref meter
+ZAX UNITS A/B/C/D                        ZAXMODBUS FIELD FLEET (Board_01-12)   BENCH (Unit_D, cal_F07F8C)
+  zax_E47730/E482C0/73DA28/F07F8C          zax_<mac> x12                        box CTs + SDM630 ref meter
          |                                      |                                     |
          | MQTT (binary sec/min)                | MQTT                                | MQTT (sec bin / min JSON)
          v                                      v                                     v
-  Pi broker :1883 (.225)          [see: currently FAILED]           WS broker :1883 (.11) <---+
-         |                                      |                                     |        |
-         | (WS subscribes remotely)             | (WS subscribes remotely)            |        |
-         v                                      v                                     v        |
-   zax-parser (WS)                    zaxmodbus-parser (WS)              cal_collector (WS)    |
-         |                                      |                              |               |
-         v                                      v                          SQLite              |
-   InfluxDB :8086 -----------------------------------------------------> cal_data.db      cal-parser (WS)
+                        WS broker  mosquitto :1883  (192.168.20.11)  <-------------------+
+         |                                      |                                     |
+         v                                      v                                     v
+   zax-parser (localhost)            zaxmodbus-parser (localhost)      cal_collector (localhost)
+         |                                      |                              |
+         v                                      v                          SQLite
+   InfluxDB :8086 -----------------------------------------------------> cal_data.db      cal-parser (localhost)
    (org zax; buckets zaxenergy, zaxmodbus)                                   |                  |
          |                                                              cal_reports :8080        |
          +------------------------------- Grafana :3000 -----------------------------------------+
 
-  Modbus (separate from MQTT): ZaxModbus fleet also polled via Pi's RS-485
-  (/dev/ttyUSB0) -> zaxmodbus-poller -> InfluxDB zaxmodbus bucket (redundant path to
-  the MQTT one above, per ZaxModbus's own dual-transport design)
+  Modbus (separate from MQTT, ad-hoc not persistent): ZaxModbus bench units also
+  pollable via Pi's RS-485 (/dev/ttyUSB0, /home/pi/zaxmodbus_modbus_poller.py) ->
+  InfluxDB zaxmodbus bucket directly (redundant path to the MQTT one above, per
+  ZaxModbus's own dual-transport design) — verified 2026-08-06: not a running
+  service/cron, run manually for test/verification sessions only.
 
   Disabled: zax-bridge -> zax/json -> zax-influx (local WS broker, no publisher,
-  superseded by zax-parser; confirmed still inactive+disabled live 2026-07-21)
+  superseded by zax-parser; confirmed still inactive+disabled live 2026-08-06)
 ```
 
-- **Legacy ZAX path (A/B/C):** units → Pi broker → `zax-parser` (WS, remote-subscribed)
-  → InfluxDB `zaxenergy` → Grafana. **Currently broken end-to-end** — the Pi broker
-  it depends on is down (see correction 1).
-- **ZaxModbus fleet path (12 boards):** units → WS broker → `zaxmodbus-parser` →
-  InfluxDB `zaxmodbus` → Grafana, **plus** a parallel Modbus/RS-485 path via the Pi.
-- **Bench path (Unit D):** WS broker → `cal_collector` (→ SQLite → `cal_reports`
-  PDF/web) and `cal-parser` (→ InfluxDB → Grafana).
-- Both brokers anonymous on `:1883`.
+- **ZAX path (Units A/B/C/D):** units → **Workstation broker directly** → `zax-parser`
+  (localhost-subscribed) → InfluxDB `zaxenergy` → Grafana. No Pi-relay hop — see the
+  2026-08-06 correction above.
+- **ZaxModbus field-fleet path (Board_01–12):** units → Workstation broker →
+  `zaxmodbus-parser` → InfluxDB `zaxmodbus` → Grafana, **plus** an ad-hoc (not
+  persistent) parallel Modbus/RS-485 verification path via the Pi's local bench units.
+- **Bench path (Unit_D):** WS broker → `cal_collector` (→ SQLite → `cal_reports`
+  PDF/web) and `cal-parser` (→ InfluxDB → Grafana). Note `zax_F07F8C` (ZaxModbus,
+  Unit_D) and `cal_F07F8C` (EnergyCalibrator bench) are the **same physical board**
+  (MAC suffix `F07F8C`), repurposed between projects — not two different units.
+- Both brokers anonymous on `:1883`. The Workstation broker is the sole production
+  path for every unit above; Pi's broker is local dev/test-only (see Operating rule 4).
 
 ## Units (publishers)
 
 | Unit | IP | MQTT topic | Publishes to |
 |---|---|---|---|
-| Unit A | 192.168.110.152 | `zax_E47730` | Pi broker (currently down) |
-| Unit C | 192.168.110.125 | `zax_73DA28` | Pi broker (currently down) |
-| Unit B | 192.168.110.76 | `zax_E482C0` | Pi broker (currently down; field unit, user-managed, may be offline anyway) |
-| Unit D (bench) | 192.168.110.104 | `cal_F07F8C` | WS broker |
-| ZaxModbus fleet (Board_01–12) | .121–.131 range | `zax_<mac>` per board | WS broker |
+| Unit_A | 192.168.20.231 (reserved) | `zax_E47730` | WS broker directly |
+| Unit_B | 192.168.20.232 (reserved) | `zax_E482C0` | WS broker directly |
+| Unit_C | 192.168.20.233 (reserved) | `zax_73DA28` | WS broker directly |
+| Unit_D (bench) | 192.168.20.234 (reserved) | `zax_F07F8C` / `cal_F07F8C` | WS broker directly (dual role, see note above) |
+| ZaxModbus field fleet (Board_01–12) | not verified here — field-deployed, not on this bench LAN; see `boards.json`/ZaxModbus project docs | `zax_<mac>` per board | WS broker directly |
 
 ## Operating rules
 
@@ -95,14 +110,14 @@ LEGACY ZAX UNITS (A/B/C)                 ZAXMODBUS FLEET (12 boards)          BE
    (`/home/pi/boards.json`) — futro's `flash_guard.py` reaches it over an `sshfs`
    mount, never a local copy, so the catalog never has two independently-writable
    copies (amended 2026-07-22, see above).
-4. **Brokers:** WS broker is the permanent one. The Pi broker exists only for the
-   legacy ZAX field units — and is currently down (correction 1); don't add new
-   publishers to it regardless of whether it's fixed.
+4. **Brokers:** the Workstation broker is the sole production broker for every unit
+   above. Pi's own broker is local dev/test-only (verified 2026-08-06: zero connected
+   clients) — don't add production publishers to it.
 5. **Data-safety for any cutover:** parallel-run → verify stores agree → switch
    publisher → decommission old path. Never tear down the old path first.
-6. **Driving another node:** direct SSH (`ssh ws`, and whatever alias the Futro gets
-   once it exists) is the default. `COORDINATION.md`'s GitHub task-spec hand-off is the
-   fallback for work that must run in a Claude session *on* that node.
+6. **Driving another node:** direct SSH (`ssh ws`, `ssh futro`) is the default.
+   `COORDINATION.md`'s GitHub task-spec hand-off is the fallback for work that must run
+   in a Claude session *on* that node.
 7. **Coordinator role is a field, not a fact:** whichever node is marked `role:
    coordinator` in `nodes/INDEX.md` drives the others — don't hardcode "the Pi does X"
    in new docs; reference the index instead (see `COORDINATION.md`).

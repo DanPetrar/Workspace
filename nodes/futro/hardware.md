@@ -14,7 +14,7 @@ live (`lscpu`, `free -h`, `lsblk -d -o NAME,SIZE,MODEL`, `/sys/firmware/efi`,
 | Partitions | `sda1` 487 MB vfat `/boot/efi`; `sda2` 7.5 GB swap; `sda3` 469 GB ext4 `/` — matches the plan's section 2 scheme exactly |
 | OS | Debian GNU/Linux 13 (trixie) x86_64 |
 | Hostname | `futro` |
-| IP | 192.168.110.8 (DHCP, `eno1`) |
+| IP | 192.168.20.226 (DHCP, `eno1`) |
 
 ## Role
 

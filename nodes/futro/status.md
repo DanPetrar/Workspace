@@ -109,6 +109,33 @@ testing needs it** — not a fixed-duration loan. While it's here: the s3zero li
 participate in the permanent bench's RS-485 bus. See the transition plan's Step 4 for the
 full reasoning and Step 1.3 for the outage-log trigger this entry closes.
 
+## 2026-08-14 — Fixed: `boards.json` sshfs split-brain (3 weeks old, found via Phase 2 testing)
+
+`~/boards.json` on futro symlinks through the `sshfs` mount (`bench:/home/pi/shared`) to
+what should be raspi's real catalog file. It wasn't: `/home/pi/shared/boards.json` was a
+**separate, independent, stale copy**, not a link to `/home/pi/boards.json` — created
+2026-07-22 (futro's bring-up) and never reconciled since. Every futro-originated
+`flash_guard.py` write for over three weeks landed in this dead-end copy, invisible to
+raspi's own tooling (test platform, `gate.py`, `ready_check.py`, raspi's own reads).
+114-line diff between the two files at time of discovery.
+
+Found via `nodes/futro/devmachine-transition-plan.md` Step 4.5.1's cross-machine
+write-visibility check, which failed exactly as designed. **Fixed same day:** merged the
+one genuinely-newer entry (Unit_D's real flash timestamp from the triggering test —
+everything else in the stale copy was equal-or-older), then moved the real file into the
+exported `shared/` directory and symlinked `/home/pi/boards.json` down into it (the
+working direction — an outward-pointing symlink from inside an `sshfs`-exported
+directory doesn't resolve across the mount boundary, confirmed live when the first
+attempt failed with `PermissionError`). Backup of the pre-fix file:
+`/home/pi/boards.json.bak-20260814-presymlinkfix`. Verified after the fix: 21/21 board
+entries preserved, futro's read now matches raspi's real file exactly both directions,
+and a live write from futro lands correctly.
+
+**Corrects an assumption this plan and `setup-plan.md` §5 check #8 both carried:** that
+check verified the `sshfs` mount was reachable, not that a write round-trips into the
+file raspi's tooling actually reads. That gap existed silently since bring-up — treat
+"boards.json access works from futro" as verified **2026-08-14**, not since 2026-07-22.
+
 ## Open items
 
 - **futro USB-CDC serial capture gap (found 2026-08-14, unresolved).** Flashing an

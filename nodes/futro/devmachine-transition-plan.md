@@ -306,7 +306,7 @@ is a separate port from the shared `/dev/ttyUSB0` RS-485 adapter both units talk
 **Success criterion:** PASS once both are physically present and enumerated. FAIL — stop
 here — if Unit_D can't be located/connected; this step can't proceed without it.
 
-### 4.5.1 — Flash Unit_D from futro (second board type + boards.json cross-visibility)
+### 4.5.1 — Flash Unit_D from futro (second board type + boards.json cross-visibility) — DONE 2026-08-14, PASS (after a real fix)
 
 Step 3 only ever exercised `build_s3zero.sh`. `build_lilygo.sh` shares the same two
 hardcoded-path bugs already fixed (`$HOME` substitution, `identity_guard.py`
@@ -333,6 +333,37 @@ raspi's own copy of the file, not just through futro's `sshfs` mount looking at 
 the updated `last_flash` timestamp within a few seconds of the flash completing — the
 concrete evidence Step 6 needs (a real write, originating from futro, checked for
 visibility from the *other* side), not just Step 3's single same-machine confirmation.
+
+**Actual result: boot-health check PASSED cleanly — literal `SMOKE TEST: PASS`,
+including the Modbus RTU check via futro's own adapter (LilyGO's CDC worked fine on
+futro, unlike the S3-Zero's unresolved gap — confirms that finding doesn't transfer
+across board types, as flagged above). The cross-visibility check FAILED initially, and
+that failure uncovered a real, three-week-old infrastructure bug, not a fluke:**
+
+`~/boards.json` on futro is a symlink through the `sshfs` mount to
+`bench:/home/pi/shared/boards.json` — which turned out to be a **separate, independent,
+stale copy** of the real catalog, not a link to `/home/pi/boards.json`. Created
+2026-07-22 (futro's bring-up date) and never reconciled since — every futro-originated
+`flash_guard.py` write for over three weeks landed in this dead-end copy, invisible to
+raspi's own tooling. Confirmed via a 114-line diff between the two files at time of
+discovery.
+
+**Fixed same session (Fable):** merged the one genuinely-newer entry (Unit_D's real
+`last_flash` from this flash, `2026-08-14T17:31:32` — everything else in the stale copy
+was equal-or-older; `Board_13/14/15` only ever existed in the real file, so nothing else
+needed merging), then corrected the topology — moved the real file *into* the exported
+`shared/` directory and symlinked `/home/pi/boards.json` down into it (not the reverse;
+an outward-pointing symlink from inside an `sshfs`-exported directory doesn't resolve
+correctly across the mount boundary — confirmed live, that direction failed with a
+`PermissionError` on the first attempt). Backup of the pre-fix real file kept at
+`/home/pi/boards.json.bak-20260814-presymlinkfix`. Independently verified after the fix:
+21/21 board entries preserved with no other data loss, and futro's own read now matches
+raspi's real file exactly, both directions.
+
+**Success criterion: PASS, but only after the fix — record it that way, not as a clean
+first-time pass.** `flash_guard.py`'s writer (`open(CATALOG, "w")`) was confirmed to
+write through a symlink safely (no tempfile+rename that could silently re-break this),
+so the fix should hold for future writes without re-occurring.
 
 **Why not "flash N times" for fluke-proofing instead:** esptool's write+verify is a
 deterministic checksum-verified write, not the kind of operation that fails
@@ -467,10 +498,21 @@ implicit.
 
 Currently single-authority on raspi, reached by futro via `sshfs`; nightly backup cron
 (raspi → Workstation, 00:15) already covers the "irreplaceable SD-card state" risk
-regardless of how this resolves. Step 3, once run, will be the first real write to
-`boards.json` (`flash_guard.py update`) originating from futro under actual use — worth
-watching that it lands correctly through the `sshfs` mount as part of Step 3's own check,
-not just assumed.
+regardless of how this resolves.
+
+~~Any earlier assumption in this plan or in `setup-plan.md` §5 check #8 that the `sshfs`
+mount "already works" for futro↔raspi `boards.json` access meant a write actually lands
+in the file raspi's own tooling reads.~~ **CORRECTED 2026-08-14 — that assumption was
+false for over three weeks.** Check #8 verified the mount was *reachable* and
+*readable*, not that a write round-trips correctly. Step 4.5.1 found the real bug: the
+`sshfs`-exported directory on raspi (`/home/pi/shared/`) held an independent, stale copy
+of `boards.json`, not a link to the real file — every futro-originated write since
+2026-07-22 silently landed in a dead end. **Fixed 2026-08-14** (see Step 4.5.1 for full
+detail): the real file now lives inside the exported directory with
+`/home/pi/boards.json` symlinked down into it, and a write from futro is confirmed
+(live, both by Fable's fix-verification and independently re-checked) to land correctly
+and be immediately visible from raspi's own read. Treat this as now-working, verified
+today — not as something that was always fine.
 
 **What the human should actually look at before recording this decision:**
 1. Current mount health from futro's side: `ssh futro 'mount | grep sshfs'` — confirm it's
@@ -553,10 +595,15 @@ around a known gap.
 5. **RS-485 from futro:** real Modbus data read via futro's own adapter, negative control
    included. **PASS, done 2026-08-14** (single-device scope; multi-drop-at-scale noted as
    a separate open item under Step 5, not required for this checklist item).
-5.5. **Multi-drop + duration validation (Step 4.5):** both Unit_A and Unit_D respond
+5.4. **4.5.1 — second board type flashed + boards.json cross-visibility:** Unit_D flashed
+   clean from futro via `build_lilygo.sh`, literal `SMOKE TEST: PASS` including the
+   Modbus RTU check (LilyGO's CDC works on futro, unlike the S3-Zero's gap). **PASS,
+   done 2026-08-14, but only after fixing a real 3-week-old `sshfs` split-brain bug** —
+   see Step 4.5.1 for full detail. `boards.json` writes from futro now correctly reach
+   the file raspi's tooling reads.
+5.5. **4.5.2/4.5.3 — Multi-drop + duration validation:** both Unit_A and Unit_D respond
    correctly and distinctly on one shared bus/adapter from futro; ≥99.5% Modbus success
-   per unit over a 4h round-robin soak. **Not yet run** — precondition: Unit_D must be
-   located and connected to futro's bus first (currently not visible on futro or raspi).
+   per unit over a 4h round-robin soak. **Not yet run.**
 6. **Bench-location decision recorded:** stated explicitly, referencing the multi-drop
    scope limit. FAIL if undocumented.
 7. **`boards.json` authority decision recorded:** exactly one writable copy, backup cron

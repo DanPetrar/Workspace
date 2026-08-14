@@ -393,7 +393,7 @@ bus. FAIL — and stop before 4.5.3 — on a timeout, a `None`, or duplicate/cro
 data; that's a real multi-drop defect (bus contention, termination/biasing, address
 collision) worth its own investigation, not something a longer soak will clarify.
 
-### 4.5.3 — Duration soak (4 hours, round-robin, both units)
+### 4.5.3 — Duration soak (4 hours, round-robin, both units) — DONE 2026-08-14, PASS
 
 **Duration justified from the project's own precedent, not invented:**
 `tools/zaxtest/soak_l3.py`'s own default is `--hours 4` ("the gate for buffer/memory
@@ -455,6 +455,19 @@ electrical/protocol behavior over a real duration — not the literal full 4-uni
 Note that scope honestly in Step 5's decision record, don't overstate it as "the full
 bench proven."
 
+**Actual result: PASS.** Ran 17:41→21:41 2026-08-14 (full 4h). Final counts, both units,
+zero failures:
+
+| Unit | Total reads | OK | Fail | Success rate |
+|------|------------|-----|------|--------------|
+| Unit_A (slave 20) | 13,615 | 13,615 | 0 | **100.0%** |
+| Unit_D (slave 21) | 13,615 | 13,615 | 0 | **100.0%** |
+
+No failure clustering to check for — there were no failures at all. This beats even the
+project's own prior 3-unit precedent (99.9%/100%/~100% in
+`Doc/bringup-test-plan-s3zero-lilygo.md`) — futro's adapter held a clean 2-unit
+multi-drop bus for the full duration with zero contention.
+
 ---
 
 ## Step 5 — Bench-location decision (Units A–D / RS-485, long-term)
@@ -472,9 +485,10 @@ target scale.
 2. Multi-drop behavior at scale: Step 3.5 proved one device on one dongle from futro — the
    real bench runs up to 4 units on one bus. Worth a multi-unit test before trusting this
    for the full permanent bench, not just extrapolating from one board. **Addressed by
-   Step 4.5** (pending execution) — real multi-drop (2 of 4 units) over a 4h window, not
-   just point-to-point. Still not literally all 4 units simultaneously; note that gap
-   explicitly in the decision record rather than treating 4.5 as full-scale proof.
+   Step 4.5 — DONE 2026-08-14, PASS:** 100.0% success both units, zero failures, over a
+   full 4h round-robin window on one shared adapter (2 of 4 bench units). Still not
+   literally all 4 units simultaneously; note that gap explicitly in the decision record
+   rather than treating 4.5 as full-scale proof.
 3. Power/placement at the bench itself — does relocating change how Units A–D are powered
    or mounted, independent of which machine polls them.
 4. Whether moving the bench interrupts anything currently running for longer than this
@@ -603,7 +617,9 @@ around a known gap.
    the file raspi's tooling reads.
 5.5. **4.5.2/4.5.3 — Multi-drop + duration validation:** both Unit_A and Unit_D respond
    correctly and distinctly on one shared bus/adapter from futro; ≥99.5% Modbus success
-   per unit over a 4h round-robin soak. **Not yet run.**
+   per unit over a 4h round-robin soak. **PASS, done 2026-08-14 — 100.0% both units,
+   13,615/13,615 reads each, zero failures over the full 4h run** (scope: 2 of 4 bench
+   units, not the literal full bench — see Step 5).
 6. **Bench-location decision recorded:** stated explicitly, referencing the multi-drop
    scope limit. FAIL if undocumented.
 7. **`boards.json` authority decision recorded:** exactly one writable copy, backup cron

@@ -280,6 +280,152 @@ not left ambiguous.
 
 ---
 
+## Step 4.5 — Multi-drop + duration validation of futro's RS-485 path — NOT YET RUN
+
+Step 3.5 proved point-to-point RS-485 from futro against one device with a handful of
+single reads. Two real gaps remain before Step 5/6 can be decided with confidence: (a)
+does futro's one adapter handle **multiple slaves sharing the same bus** (the bench's
+actual topology), and (b) does it hold up over **sustained polling**, not a handful of
+one-shot reads. This step closes both, and folds in a second board type's flash path
+plus a cross-machine `boards.json`-visibility check while a second unit is on hand
+anyway.
+
+**Precondition — locate and connect Unit_D (not assumed available):** Unit_D is not
+currently visible on futro or raspi (`/dev/serial/by-id/` empty on both, checked
+2026-08-14). **Ask the user to physically locate Unit_D and connect it to futro, sharing
+futro's existing RS-485 adapter/bus with Unit_A** (same A/B differential pair — a second
+dongle would not test multi-drop, it would just be two more single-device tests). Before
+disconnecting it from wherever it currently is, run the same pre-disconnect checklist
+Step 1.1 used for Unit_A (active `gate.py`/pytest check, confirm `role: bench` hasn't
+changed, snapshot its `boards.json` entry) — it wasn't gated last time; it should be
+this time.
+
+**Check:** `ssh futro 'ls /dev/serial/by-id/'` shows both the existing Unit_A entry and a
+new LilyGO entry; `ssh futro 'ls /dev/ttyACM*'` shows a second ACM device (LilyGO's CDC
+is a separate port from the shared `/dev/ttyUSB0` RS-485 adapter both units talk over).
+**Success criterion:** PASS once both are physically present and enumerated. FAIL — stop
+here — if Unit_D can't be located/connected; this step can't proceed without it.
+
+### 4.5.1 — Flash Unit_D from futro (second board type + boards.json cross-visibility)
+
+Step 3 only ever exercised `build_s3zero.sh`. `build_lilygo.sh` shares the same two
+hardcoded-path bugs already fixed (`$HOME` substitution, `identity_guard.py`
+expanduser) but has never actually been run end-to-end from futro. Flash the **same
+version already on Unit_D (v1.1.19)**, matching Step 3's non-destructive convention,
+then enable Demo-Mode the same approved way (`POST /api/config {"demo_en":true}`).
+
+**Do:**
+```
+ssh futro 'bash -lc "cd ~/ZaxModbus/arduino && bash build_lilygo.sh /dev/ttyACM1"'
+```
+(port will differ from Unit_A's — confirm via the precondition check above.)
+
+**Check:** same amended criterion as Step 3 — `/api/sysinfo` `fw_version` match +
+`boot_count` incremented + `mqtt_connected:true` (the futro CDC-capture gap may or may
+not reproduce here — LilyGO's CDC implementation differs from the S3-Zero's native
+peripheral, so don't assume the Step 3 finding transfers; note whichever way it goes).
+**Then, from raspi (not futro):**
+`python3 -c "import json; print(json.load(open('/home/pi/boards.json'))['80:b5:4e:f0:7f:8c'])"`
+— confirms the write `flash_guard.py` just made on futro is immediately visible on
+raspi's own copy of the file, not just through futro's `sshfs` mount looking at itself.
+
+**Success criterion:** PASS if the boot-health check passes AND raspi's own read shows
+the updated `last_flash` timestamp within a few seconds of the flash completing — the
+concrete evidence Step 6 needs (a real write, originating from futro, checked for
+visibility from the *other* side), not just Step 3's single same-machine confirmation.
+
+**Why not "flash N times" for fluke-proofing instead:** esptool's write+verify is a
+deterministic checksum-verified write, not the kind of operation that fails
+intermittently the way the CDC byte-stream turned out to be — repeating the identical
+operation mostly re-confirms the same result. A second flash of a *different*
+board/build-script path is a better use of one more flash cycle than repeating the same
+one.
+
+### 4.5.2 — Multi-drop correctness check (both units, one bus, one adapter)
+
+**Do:**
+```
+ssh futro 'python3 -c "
+from zaxtest.modbus import ModbusClient
+bus = ModbusClient(port=\"/dev/ttyUSB0\")
+a = bus.read_sec(20)
+d = bus.read_sec(21)
+print(\"Unit_A:\", a)
+print(\"Unit_D:\", d)
+"'
+```
+**Check:** both calls return a populated dict (not `None`), and — critically — each
+record's values are plausible for *that* unit (not identical to each other, which would
+indicate address confusion/cross-talk rather than two genuinely distinct reads).
+**Success criterion:** PASS if both units respond correctly and distinctly on the shared
+bus. FAIL — and stop before 4.5.3 — on a timeout, a `None`, or duplicate/cross-talked
+data; that's a real multi-drop defect (bus contention, termination/biasing, address
+collision) worth its own investigation, not something a longer soak will clarify.
+
+### 4.5.3 — Duration soak (4 hours, round-robin, both units)
+
+**Duration justified from the project's own precedent, not invented:**
+`tools/zaxtest/soak_l3.py`'s own default is `--hours 4` ("the gate for buffer/memory
+changes"), and the closest prior real-world case —
+`Doc/bringup-test-plan-s3zero-lilygo.md`'s 4-hour concurrent multi-unit soak, all
+sharing one RS-485 bus — ran 61,111 poll cycles with zero bus contention (Unit_A
+61,111/61,111, Unit_D 61,029/61,111 = 99.9%). Matching that duration here is directly
+comparable evidence, not a new number picked for this plan.
+
+**Not using `soak_l3.py` itself:** its `load_units()` has no unit-filter flag and would
+pull in Unit_C (not physically available here), and its snapshot-cycle assertions
+assume production data flow that `demo_en` explicitly disables
+(`ZaxModbus.ino:1424-1428`) — running it unmodified would produce failures unrelated to
+what this step is checking. Instead, reuse the same proven `ModbusClient` class in a
+small round-robin loop, and borrow `soak_l3.py`'s own **99.5% Modbus floor**
+(`MODBUS_FLOOR_PCT`) as the success bar, rather than inventing a new threshold.
+
+**Do:** write a small standalone script on futro (cleaner than an inline SSH one-liner
+three quoting-levels deep) —
+
+```python
+# ~/futro_multidrop_soak.py on futro
+import time, json
+from zaxtest.modbus import ModbusClient
+SLAVES = {20: "Unit_A", 21: "Unit_D"}
+bus = ModbusClient(port="/dev/ttyUSB0")
+counts = {s: {"ok": 0, "fail": 0} for s in SLAVES}
+log = open("/tmp/futro_multidrop_soak.jsonl", "w")
+end = time.time() + 4 * 3600
+while time.time() < end:
+    for s in SLAVES:
+        ok = bus.read_sec(s) is not None
+        counts[s]["ok" if ok else "fail"] += 1
+        log.write(json.dumps({"ts": time.time(), "slave": s, "ok": ok}) + "\n")
+        log.flush()
+    time.sleep(1)
+for s, n in SLAVES.items():
+    c = counts[s]
+    pct = round(100 * c["ok"] / (c["ok"] + c["fail"]), 2)
+    print(n, s, pct, c)
+```
+
+Run detached, matching `soak_l3.py`'s own documented pattern:
+```
+ssh futro 'cd ~/ZaxModbus/tools && nohup python3 ~/futro_multidrop_soak.py > /tmp/futro_multidrop_soak_summary.log 2>&1 &'
+```
+
+**Check, ~4h later:** `ssh futro 'cat /tmp/futro_multidrop_soak_summary.log'` — per-unit
+success percentage and raw counts.
+**Success criterion:** PASS if both units individually hold **≥99.5%** successful reads
+over the run (matching `soak_l3.py`'s own floor). FAIL if either unit drops meaningfully
+below that, or if failures cluster in simultaneous-both-units rounds late in the run (an
+adapter/bus-level problem, not a single unit being flaky) — check
+`/tmp/futro_multidrop_soak.jsonl` for that pattern specifically before concluding
+PASS/FAIL from the summary percentage alone.
+
+**This resolves:** Step 5's checklist item 2 with 2 of 4 bench units, real multi-drop
+electrical/protocol behavior over a real duration — not the literal full 4-unit bench.
+Note that scope honestly in Step 5's decision record, don't overstate it as "the full
+bench proven."
+
+---
+
 ## Step 5 — Bench-location decision (Units A–D / RS-485, long-term)
 
 Explicitly undecided per the user's constraints. Step 3.5 changes what's known here —
@@ -294,7 +440,10 @@ target scale.
    location vs. staying at raspi's.
 2. Multi-drop behavior at scale: Step 3.5 proved one device on one dongle from futro — the
    real bench runs up to 4 units on one bus. Worth a multi-unit test before trusting this
-   for the full permanent bench, not just extrapolating from one board.
+   for the full permanent bench, not just extrapolating from one board. **Addressed by
+   Step 4.5** (pending execution) — real multi-drop (2 of 4 units) over a 4h window, not
+   just point-to-point. Still not literally all 4 units simultaneously; note that gap
+   explicitly in the decision record rather than treating 4.5 as full-scale proof.
 3. Power/placement at the bench itself — does relocating change how Units A–D are powered
    or mounted, independent of which machine polls them.
 4. Whether moving the bench interrupts anything currently running for longer than this
@@ -333,6 +482,10 @@ not just assumed.
    may shift if futro becomes the primary flashing machine.
 3. Whichever way this goes, check the 00:15 backup cron's source path — if authority moves
    to futro, retarget the cron in the same change, not as a follow-up.
+4. **Cross-machine write visibility** (Step 4.5.1): a futro-originated `boards.json`
+   write, confirmed visible from raspi's own read within seconds — not just Step 3's
+   single same-machine confirmation. This is closer to what "authority" actually needs
+   proven than write *count*.
 
 **Do:** Human decision — keep raspi as sole writer, or move the canonical file to futro
 (raspi would then need the reverse mount, and the backup source would need to retarget).
@@ -384,7 +537,9 @@ around a known gap.
    Pre-disconnect test-platform-run check was not live-verified (§ Step 1.1) — noted, not
    blocking, but a residual unconfirmed item.
 2. **Cable/port sanity:** `esptool read_flash 0x0 4096` on `/dev/ttyACM0` exits 0,
-   4096-byte file. **Not yet run.**
+   4096-byte file. **PASS, done 2026-08-14** (via the arduino-cli-bundled `esptool`
+   binary directly — the system `python3 -m esptool` module isn't installed on futro;
+   noted, not blocking, since Step 3 sources the ESP-IDF venv instead).
 3. **Flash + smoke test:** **PASS, done 2026-08-14, amended criterion.** Same firmware
    version reflashed (v1.1.19); literal serial `SMOKE TEST: PASS` did NOT occur (0-byte
    capture — confirmed futro-specific USB-CDC gap, not a flash/boot defect); PASSED
@@ -398,6 +553,10 @@ around a known gap.
 5. **RS-485 from futro:** real Modbus data read via futro's own adapter, negative control
    included. **PASS, done 2026-08-14** (single-device scope; multi-drop-at-scale noted as
    a separate open item under Step 5, not required for this checklist item).
+5.5. **Multi-drop + duration validation (Step 4.5):** both Unit_A and Unit_D respond
+   correctly and distinctly on one shared bus/adapter from futro; ≥99.5% Modbus success
+   per unit over a 4h round-robin soak. **Not yet run** — precondition: Unit_D must be
+   located and connected to futro's bus first (currently not visible on futro or raspi).
 6. **Bench-location decision recorded:** stated explicitly, referencing the multi-drop
    scope limit. FAIL if undocumented.
 7. **`boards.json` authority decision recorded:** exactly one writable copy, backup cron
@@ -405,5 +564,5 @@ around a known gap.
 8. **Cutover documented, raspi verified intact:** both machines' build scripts still run
    post-cutover. FAIL if raspi's toolchain was degraded in the process.
 
-Until all 8 PASS, raspi remains the practical development machine for any work that can't
+Until all 9 PASS, raspi remains the practical development machine for any work that can't
 tolerate an unverified step, regardless of what any status doc's role field says.

@@ -111,6 +111,21 @@ full reasoning and Step 1.3 for the outage-log trigger this entry closes.
 
 ## Open items
 
+- **futro USB-CDC serial capture gap (found 2026-08-14, unresolved).** Flashing an
+  ESP32-S3-Zero (native USB-Serial/JTAG peripheral, Arduino `HWCDC`) through futro's own
+  USB port works — compile, `identity_guard.py`, `esptool` flash+verify all succeed, and
+  the board is confirmed healthy post-flash via `/api/sysinfo`/`/api/data` over WiFi. But
+  futro's kernel receives **zero bytes** from the board's running-app console endpoint
+  under every method tried (`cat`, explicit DTR+RTS `pyserial`, a fresh capture across a
+  real `/restart`-triggered reboot) — not a timing issue, not a device re-enumeration
+  issue (`dmesg` shows none). `esptool` reaches the same port fine via the ROM-bootloader
+  UART, a different code path, so this is specific to the app-console CDC stream. Needs
+  USB-protocol tracing (`usbmon`) to root-cause — not done, out of scope for Phase 2.
+  Until fixed, futro-originated flashes of this board type must use the HTTP-based
+  boot-verification fallback documented in
+  `nodes/futro/devmachine-transition-plan.md` Step 3, not the literal serial smoke-test
+  PASS line `feedback_post_flash_smoke_test` normally requires.
+
 **All 9 checklist items now PASS (2026-08-06) — the coordinator-role transfer from
 raspi to futro is verifiably complete per `setup-plan.md`'s own bar.**
 

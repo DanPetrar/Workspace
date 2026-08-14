@@ -94,6 +94,21 @@ no request for missing context.
 Workstation, `00:15` daily) — the "worth doing regardless" item from the section above
 is no longer open, independent of whether authority ever moves off raspi.
 
+## 2026-08-14 — Unit_A on loan to futro for Phase 2 validation
+
+Unit_A (`waveshare_s3zero`, MAC `3c:0f:02:e4:77:30`) and a CH340 RS-485-to-USB adapter are
+connected to futro's own USB ports for `nodes/futro/devmachine-transition-plan.md` Phase 2
+testing (USB flash round-trip + RS-485/Modbus validation from futro). Box was never wired
+to this unit; Demo-Mode (`demo_en:true`, set today) supplies test data — no bench sensor
+data involved.
+
+**Disposition (user decision, 2026-08-14): Unit_A stays on futro for as long as Phase 2
+testing needs it** — not a fixed-duration loan. While it's here: the s3zero line's
+`gate.py --board s3zero` automated test target (`role: target` in
+`ZaxModbus/tools/zaxtest/units.yaml`) is unavailable on raspi, and Unit_A does not
+participate in the permanent bench's RS-485 bus. See the transition plan's Step 4 for the
+full reasoning and Step 1.3 for the outage-log trigger this entry closes.
+
 ## Open items
 
 **All 9 checklist items now PASS (2026-08-06) — the coordinator-role transfer from

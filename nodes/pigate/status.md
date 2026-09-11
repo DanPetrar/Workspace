@@ -24,8 +24,25 @@ tracks only the node's infrastructure state.
 | Bench units, lines, Modbus addresses | open — user decision |
 | This node entry | ✅ 2026-09-11 |
 
+## 2026-09-11 — capacity measured on the current bench (before the Pi)
+
+Three virtual-unit runs (one physical unit polled as N units) to size a line, using the
+existing bench, not this node. Results and full conditions in the PiGate repo, `bench/`:
+
+| Run | Path, host | Max units at 38400 / 115200 |
+|---|---|---|
+| Unit_A | USB CH340, raspi | 22 / 46 |
+| Unit-ETH00 | USB Prolific, futro | 24 / 55 |
+| Unit_A | Waveshare `192.168.20.110` over Modbus TCP, raspi | 21 / 46 |
+
+Infrastructure side effects, all reverted or recorded: Unit_A and Unit-ETH00 switched to
+115200 and back (verified); the Waveshare's baud switched and back (logged in
+`ZaxModbus/Doc/rs485-eth-gateway/bench-setup.md`); Unit_A's RS-485 wires moved to the
+Waveshare and back to raspi's CH340 (verified); `python3-pymodbus` installed on futro
+(`nodes/futro/inventory.md`).
+
 ## Next
 
-Bring-up when the Pi arrives (week of 2026-09-14): OS flashed, DHCP reservation, SSH,
-provisioning script run from futro. Update `hardware.md` with live values and set
-`nodes/INDEX.md` status to `active` in the same change.
+**Paused 2026-09-11** until the Pi arrives (week of 2026-09-14). Bring-up then: OS flashed,
+DHCP reservation, SSH, provisioning script run from futro. Update `hardware.md` with live
+values and set `nodes/INDEX.md` status to `active` in the same change.

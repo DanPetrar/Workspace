@@ -14,6 +14,7 @@ Bring-up completed 2026-07-22, run from `raspi`'s Claude Code session per
 | SSH → `bench` (raspi) | ✅ key-based, no prompt |
 | Project repos (9) | ✅ all cloned, all `git fetch` clean |
 | `CLAUDE.md` | ✅ Futro-specific version in place, role split documented on both machines |
+| GitHub backup | ✅ nightly mirror of every `DanPetrar` repo, cron `03:30` → `~/gh-backup/` (added 2026-09-11, see below) |
 
 ## Role in the current fleet
 
@@ -135,6 +136,39 @@ and a live write from futro lands correctly.
 check verified the `sshfs` mount was reachable, not that a write round-trips into the
 file raspi's tooling actually reads. That gap existed silently since bring-up — treat
 "boards.json access works from futro" as verified **2026-08-14**, not since 2026-07-22.
+
+## 2026-09-11 — Nightly GitHub mirror backup
+
+Every `DanPetrar` GitHub repo (public and private) is mirrored to futro nightly.
+
+| Item | Value |
+|---|---|
+| Script | `~/bin/gh-backup.sh` — repo copy: `infrastructure/gh-backup.sh` (keep the two identical) |
+| Data | `~/gh-backup/<repo>.git` — bare `--mirror` clones, 13 repos / ~90 MB at setup |
+| Schedule | `dan-futro` crontab: `30 3 * * * /home/dan-futro/bin/gh-backup.sh >> /home/dan-futro/gh-backup.log 2>&1` |
+| Health | last line of `~/gh-backup.log` reads `<timestamp> done: N repos, fail=0`; exit code non-zero if any repo failed |
+| Auth used | `gh` (repo list, token in `~/.config/gh/hosts.yml`) + `~/.ssh/id_ed25519` (git over SSH) — both work without an agent |
+
+How it works: `gh repo list DanPetrar` → `git clone --mirror` for a repo not yet present,
+`git remote update --prune` for one that is. New repos are picked up automatically.
+
+**Why futro, not the workstation:** user choice on free disk (futro 419 GB free vs.
+workstation 172 GB). This is a deliberate exception to Operating rule 1 in
+`infrastructure-interaction.md` (permanent services → workstation). The workstation's
+`gh` was re-logged in the same day, so it is ready as a second backup host if wanted.
+
+**Verified 2026-09-11:** first run 38 s, exit 0; second run exercised the update path,
+exit 0; every branch/tag hash in all 13 mirrors matched `git ls-remote` against GitHub;
+`git fsck` clean on all 13; a run under a cron-like `env -i HOME=… PATH=/usr/bin:/bin`
+environment also exited 0.
+
+**Restore:** `git clone ~/gh-backup/<repo>.git`, or create an empty remote and
+`git -C ~/gh-backup/<repo>.git push --mirror <new-url>`.
+
+**Not covered:** issues, pull requests, releases, wikis (`<repo>.wiki.git` would need its
+own mirror). `--prune` propagates remote branch deletions and force-pushes the next night,
+so the mirror holds the latest state only, not point-in-time snapshots — a weekly
+`git bundle` is the upgrade path if that's needed.
 
 ## Open items
 

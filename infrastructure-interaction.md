@@ -98,7 +98,9 @@ ZAX UNITS A/B/C/D                        ZAXMODBUS FIELD FLEET (Board_01-12)   B
 ## Operating rules
 
 1. **New permanent/production service → the Workstation node**, via `ssh ws`. Update
-   `nodes/workstation/status.md` in the same commit.
+   `nodes/workstation/status.md` in the same commit. **Exception (2026-09-11, user
+   choice on free disk):** the nightly GitHub mirror backup runs on futro — see
+   `nodes/futro/status.md`.
 2. **Serial-attached work → whichever node the hardware is physically plugged into.**
    USB serial, GPIO, RS-485 work needs the board physically connected — raspi holds
    the permanent bench (Units A-D, RS-485 bus); futro (co-located) can take a board's

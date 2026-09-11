@@ -12,6 +12,7 @@ reconfigured.
 | Java | OpenJDK 17.0.19 | was 17.0.18 — patch bump |
 | Flutter SDK | 3.44.0, `/opt/flutter` | not independently reconfirmed this pass |
 | Android SDK | `~/Android/Sdk`, API 36 | not independently reconfirmed this pass |
+| GitHub CLI (`gh`) | 2.46.0 | added 2026-09-11 — stored token had gone invalid; re-logged in as `DanPetrar` (token in keyring, protocol `https`, scopes `repo, workflow, gist, read:org` — no `admin:public_key`). Git over SSH to GitHub also works. |
 
 ## Disk (live)
 

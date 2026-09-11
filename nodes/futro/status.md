@@ -190,6 +190,17 @@ tests cannot disturb the units, parsers or soak data.
 so the mirror holds the latest state only, not point-in-time snapshots — a weekly
 `git bundle` is the upgrade path if that's needed.
 
+## 2026-09-11 — `flash_guard.py` on futro was a stale copy
+
+futro's `~/flash_guard.py` is a **regular file, not a link** (unlike `~/identity_guard.py`,
+which links into the ZaxCommon clone). It was byte-identical to raspi's committed `83217fa`,
+i.e. it had silently missed the 2026-09-08 `catalog_lock` change and today's NEW-BOX
+`board_line()` fix. Replaced with raspi's HEAD (`ffde4e1`) after confirming it had no local
+edits; md5 matches on both hosts. **Until the copy is replaced by a link or an explicit sync,
+re-copy it whenever raspi's changes.** Related open item: the lock itself cannot serialise
+across hosts (separate local lock files; sshfs carries no `flock`) — `ZaxModbus/Doc/WISHLIST.md`
+#33.
+
 ## Open items
 
 - **futro USB-CDC serial capture gap (found 2026-08-14, unresolved).** Flashing an

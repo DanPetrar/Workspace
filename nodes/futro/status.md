@@ -15,6 +15,7 @@ Bring-up completed 2026-07-22, run from `raspi`'s Claude Code session per
 | Project repos (9) | ✅ all cloned, all `git fetch` clean |
 | `CLAUDE.md` | ✅ Futro-specific version in place, role split documented on both machines |
 | GitHub backup | ✅ nightly mirror of every `DanPetrar` repo, cron `03:30` → `~/gh-backup/` (added 2026-09-11, see below) |
+| PiGate test broker | ✅ Mosquitto 2.0.21, `:1883` plain + `:8883` TLS (own CA), anonymous — **test only** (added 2026-09-11, see below) |
 
 ## Role in the current fleet
 
@@ -166,7 +167,26 @@ environment also exited 0.
 `git -C ~/gh-backup/<repo>.git push --mirror <new-url>`.
 
 **Not covered:** issues, pull requests, releases, wikis (`<repo>.wiki.git` would need its
-own mirror). `--prune` propagates remote branch deletions and force-pushes the next night,
+own mirror).
+
+## 2026-09-11 — PiGate test MQTT broker
+
+Step P0.2 of the PiGate plan (`github.com/DanPetrar/PiGate`, `PLAN.md` D7): a broker the
+PiGate bench publishes to, **separate from the workstation's production broker** so PiGate
+tests cannot disturb the units, parsers or soak data.
+
+| Item | Value |
+|---|---|
+| Package | `mosquitto` 2.0.21 (Debian), `systemctl` enabled |
+| Config | `/etc/mosquitto/conf.d/pigate-test.conf` — `listener 1883` plain, `listener 8883` TLS, `allow_anonymous true` |
+| Certs | `/etc/mosquitto/certs/`: `ca.crt` (CN "PiGate test CA"), `server.crt` (SAN `DNS:futro, IP:192.168.20.226`, valid to 2036), `server.key` (root:mosquitto 640), `ca.key` (root 600, kept to re-issue) |
+| Client TLS | clients need `--cafile ca.crt` — the cert is **not** publicly trusted, by design |
+
+**Anonymous on both ports — LAN test broker only, never a customer configuration.**
+
+**Verified 2026-09-11 from raspi:** publish/subscribe round trip on `:1883`; round trip on
+`:8883` with our CA at QoS 1; negative control — a TLS handshake trusting only the system
+(public) CAs is refused. Broker log clean on start. `--prune` propagates remote branch deletions and force-pushes the next night,
 so the mirror holds the latest state only, not point-in-time snapshots — a weekly
 `git bundle` is the upgrade path if that's needed.
 

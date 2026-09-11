@@ -114,7 +114,9 @@ ZAX UNITS A/B/C/D                        ZAXMODBUS FIELD FLEET (Board_01-12)   B
    copies (amended 2026-07-22, see above).
 4. **Brokers:** the Workstation broker is the sole production broker for every unit
    above. Pi's own broker is local dev/test-only (verified 2026-08-06: zero connected
-   clients) — don't add production publishers to it.
+   clients) — don't add production publishers to it. futro runs a **PiGate test broker**
+   (`:1883` plain, `:8883` TLS, added 2026-09-11) — test-only, same rule; see
+   `nodes/futro/status.md`.
 5. **Data-safety for any cutover:** parallel-run → verify stores agree → switch
    publisher → decommission old path. Never tear down the old path first.
 6. **Driving another node:** direct SSH (`ssh ws`, `ssh futro`) is the default.

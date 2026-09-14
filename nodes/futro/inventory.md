@@ -13,6 +13,7 @@ Verified live 2026-07-22. Update whenever a tool is installed/removed/reconfigur
 | ESP-IDF | v6.0.1 (`~/esp/esp-idf`) — matches raspi |
 | `esptool` | via the ESP32 arduino-cli core (bundled, not separate), same as raspi |
 | `python3-pymodbus` | 3.8.6 (Debian package, installed 2026-09-11 for the PiGate virtual-unit bench test) — same version as raspi's |
+| `python3-paho-mqtt` | 2.1.0-1 (Debian package, installed 2026-09-14 for the PiGate bench capture tool) |
 | Mosquitto broker | 2.0.21 — PiGate test broker, see `status.md` |
 
 ## Dev-toolchain parity (added 2026-07-22, same day as bring-up)

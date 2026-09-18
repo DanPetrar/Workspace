@@ -15,7 +15,7 @@ Bring-up completed 2026-07-22, run from `raspi`'s Claude Code session per
 | Project repos (9) | ✅ all cloned, all `git fetch` clean |
 | `CLAUDE.md` | ✅ Futro-specific version in place, role split documented on both machines |
 | GitHub backup | ✅ nightly mirror of every `DanPetrar` repo, cron `03:30` → `~/gh-backup/` (added 2026-09-11, see below) |
-| PiGate test broker | ✅ Mosquitto 2.0.21, `:1883` plain + `:8883` TLS (own CA), anonymous — **test only** (added 2026-09-11, see below) |
+| PiGate test broker | ✅ Mosquitto 2.0.21, `:1883` plain + `:8883` TLS (own CA), anonymous — **test only** (added 2026-09-11, see below). **Idle: PiGate ON HOLD since 2026-09-18**; bench run data stays in `~/pigate-bench/` (incl. the 31 GB GW2Pi4 SD image) |
 
 ## Role in the current fleet
 

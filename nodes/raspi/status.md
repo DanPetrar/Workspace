@@ -17,7 +17,10 @@ was, in practice, almost entirely about the workstation node — see
 
 - Coordinates ZaxModbus/EnergyCalibrator/EmonESP firmware work directly (Arduino
   build/flash toolchain, `flash_guard.py` + `/home/pi/boards.json`)
-- RS-485 bus (`/dev/ttyUSB0`) — Modbus polling for the ZaxModbus bench fleet
+- RS-485 bus (`/dev/ttyUSB0`) — Modbus polling for the ZaxModbus bench fleet. **Since 2026-09-18 no RS-485
+  adapter is plugged in** (the CH340 lives on the PiGate Pi, the Prolific on GW3M710); it is moved here only
+  for a ZaxModbus gate. Unit_A's and Unit-ETH00's own USB cables are on raspi (`/dev/ttyACM0`/`ttyACM1`,
+  by-id names in ZaxModbus `tools/zaxtest/units.yaml`). Bench units powered off 2026-09-18 15:00 for ~10 days.
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

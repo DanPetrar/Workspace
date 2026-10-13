@@ -21,6 +21,15 @@ was, in practice, almost entirely about the workstation node — see
   adapter is plugged in** (the CH340 lives on the PiGate Pi, the Prolific on GW3M710); it is moved here only
   for a ZaxModbus gate. Unit_A's and Unit-ETH00's own USB cables are on raspi (`/dev/ttyACM0`/`ttyACM1`,
   by-id names in ZaxModbus `tools/zaxtest/units.yaml`). Bench units powered off 2026-09-18 15:00 for ~10 days.
+- **Since 2026-10-13 the bench holds PS-Z001**, the first new-hardware unit (NEW-BOX + S3-Zero, MAC
+  `3C:0F:02:E4:92:18`, ZaxModbus firmware 1.2.1 from branch `v1.2.1-newbox`): USB on raspi (`/dev/ttyACM0`), WiFi
+  `192.168.20.119`, MQTT topic `zax_E49218` -> Workstation -> Grafana. The PiGate bench (Unit_A, Unit-ETH00,
+  Waveshare) was dismounted by the owner the same day; the two lines above describe the state before that.
+  Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-13-session-close.md`.
+- **USB controller wedge (third time, 2026-10-13):** every device failing with `error -110` / `-71` /
+  `unable to enumerate` after 28 days of uptime = the Pi's xHCI controller, not the device. Fix without a reboot:
+  `echo 0000:01:00.0 | sudo tee /sys/bus/pci/drivers/xhci_hcd/unbind; sleep 3; echo 0000:01:00.0 | sudo tee /sys/bus/pci/drivers/xhci_hcd/bind`
+  (ZaxModbus `Doc/errors-history.md` 2026-10-13).
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

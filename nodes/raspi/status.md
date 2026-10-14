@@ -33,6 +33,9 @@ was, in practice, almost entirely about the workstation node — see
 - **2026-10-14:** a new CH340 USB-RS485 adapter is on the Pi (`/dev/ttyUSB0`, `usb-1a86_USB_Serial-if00-port0`, no
   serial number), verified on Unit_A (100/100). PS-Z001 runs 1.2.4 by OTA and is off the Pi's USB (to be moved to a
   real grid). Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-14-session-close.md`.
+- **2026-10-14 evening:** PS-Z001 fw 1.2.5 (Modbus TX/RX swapped, works), moved to a real grid with Modbus off until
+  2026-10-16 09:00. raspi runs the hourly report recorder `hourly.py` (setsid nohup, no auto-restart after a raspi
+  reboot). Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-14-evening-status.md`.
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

@@ -30,6 +30,9 @@ was, in practice, almost entirely about the workstation node — see
   `unable to enumerate` after 28 days of uptime = the Pi's xHCI controller, not the device. Fix without a reboot:
   `echo 0000:01:00.0 | sudo tee /sys/bus/pci/drivers/xhci_hcd/unbind; sleep 3; echo 0000:01:00.0 | sudo tee /sys/bus/pci/drivers/xhci_hcd/bind`
   (ZaxModbus `Doc/errors-history.md` 2026-10-13).
+- **2026-10-14:** a new CH340 USB-RS485 adapter is on the Pi (`/dev/ttyUSB0`, `usb-1a86_USB_Serial-if00-port0`, no
+  serial number), verified on Unit_A (100/100). PS-Z001 runs 1.2.4 by OTA and is off the Pi's USB (to be moved to a
+  real grid). Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-14-session-close.md`.
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

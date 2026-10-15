@@ -41,6 +41,8 @@ was, in practice, almost entirely about the workstation node — see
   (InfluxDB + unit), grid run 2 since 13:07 with the raspi recorder `grid-20261015/hourly.py` (no auto-restart).
   fw 1.2.9 since 16:15, Modbus ON and verified via GW2Pi4 (moved next to the unit; its gateway stopped+disabled,
   `mbpoll.py` running there). The raspi has no USB serial adapter now (the CH340 went to GW2Pi4).
+  Evening: fw 1.2.10 since 18:50 (Modbus echo read back byte by byte; FC06, `0x0420`, baud 9600-115200 verified),
+  residual Modbus loss traced to `/api/sysinfo` polls (fix plan 10-16). Grafana `zax-power` v19.
   Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-15-status.md`.
 - Hosts this Claude Code coordination session
 

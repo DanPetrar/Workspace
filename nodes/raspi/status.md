@@ -37,6 +37,9 @@ was, in practice, almost entirely about the workstation node — see
   minute set in the error log), moved to a real grid with Modbus off until
   2026-10-16 09:00. raspi runs the hourly report recorder `hourly.py` (setsid nohup, no auto-restart after a raspi
   reboot). Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-14-evening-status.md`.
+- **2026-10-15:** PS-Z001 back from the box team (BOX energy direction fixed), USB reflash 1.2.7, PS-Z001 history erased
+  (InfluxDB + unit), grid run 2 since 13:07 with the raspi recorder `grid-20261015/hourly.py` (no auto-restart).
+  Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-15-status.md`.
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

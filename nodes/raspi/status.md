@@ -46,8 +46,9 @@ was, in practice, almost entirely about the workstation node — see
   Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-15-status.md`.
 - **2026-10-16:** PS-Z001 fw 1.2.11 (12:42, Modbus loss after `/api/sysinfo` polls fixed: 1/3000) and fw 1.2.12
   (13:48, power-fail GPIO1 active-high default). Run 2 recorder and GW2Pi4 `mbpoll.py` (PID 4619) continue.
-  New topics recorded (WISHLIST #49-#51: BOX reset via RstADE, power-fail handling, BOX RTC). Record: same status note,
-  section 2026-10-16.
+  New topics recorded (WISHLIST #49-#52: BOX reset via RstADE, power-fail handling, BOX RTC, energy counters).
+  BOX meeting papers v1.0, EN + RO, for the week of 2026-10-19 (ZaxModbus `Doc/box-protocol/box-meeting-topics-2026-10.md`,
+  `box-unit-format-v2.1-proposal.md`). Record: same status note, section 2026-10-16.
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

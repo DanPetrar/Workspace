@@ -44,6 +44,10 @@ was, in practice, almost entirely about the workstation node — see
   Evening: fw 1.2.10 since 18:50 (Modbus echo read back byte by byte; FC06, `0x0420`, baud 9600-115200 verified),
   residual Modbus loss traced to `/api/sysinfo` polls (fix plan 10-16). Grafana `zax-power` v19.
   Record: ZaxModbus `Doc/new-hardware/PS-Z001/2026-10-15-status.md`.
+- **2026-10-16:** PS-Z001 fw 1.2.11 (12:42, Modbus loss after `/api/sysinfo` polls fixed: 1/3000) and fw 1.2.12
+  (13:48, power-fail GPIO1 active-high default). Run 2 recorder and GW2Pi4 `mbpoll.py` (PID 4619) continue.
+  New topics recorded (WISHLIST #49-#51: BOX reset via RstADE, power-fail handling, BOX RTC). Record: same status note,
+  section 2026-10-16.
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

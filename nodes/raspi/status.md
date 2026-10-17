@@ -49,6 +49,10 @@ was, in practice, almost entirely about the workstation node — see
   New topics recorded (WISHLIST #49-#52: BOX reset via RstADE, power-fail handling, BOX RTC, energy counters).
   BOX meeting papers v1.0, EN + RO, for the week of 2026-10-19 (ZaxModbus `Doc/box-protocol/box-meeting-topics-2026-10.md`,
   `box-unit-format-v2.1-proposal.md`). Record: same status note, section 2026-10-16.
+- **2026-10-17:** run 2 continues (fw 1.2.12, boot 93, Modbus 360/360 per hour). User documents for the new hardware:
+  three Fable-reviewed DRAFTS in ZaxModbus `Doc/user-facing/new-hardware/` (User Guide, Modbus Reference, Installation
+  Manual); INDEX.md now has two user-facing sets (old set frozen). WISHLIST #53-#59. Record: same status note, section
+  2026-10-17.
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

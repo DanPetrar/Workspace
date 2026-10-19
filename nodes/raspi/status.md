@@ -53,6 +53,9 @@ was, in practice, almost entirely about the workstation node — see
   three Fable-reviewed DRAFTS in ZaxModbus `Doc/user-facing/new-hardware/` (User Guide, Modbus Reference, Installation
   Manual); INDEX.md now has two user-facing sets (old set frozen). WISHLIST #53-#59. Record: same status note, section
   2026-10-17.
+- **2026-10-19:** grid run 2 ended 07:05 (owner): `hourly.py` on raspi (PID 1211433) and `mbpoll.py` on GW2Pi4
+  (PID 4619) stopped; 90 hours, 63 PASS (on 1.2.12: 65 hours, 49 PASS); boot 93 since 10-16 13:48. PS-Z001 is to be
+  disconnected by the owner. Record: same status note, section 2026-10-19 (item 29).
 - Hosts this Claude Code coordination session
 
 ## Open items (not addressed by this build)

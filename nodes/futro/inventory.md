@@ -14,6 +14,7 @@ Verified live 2026-07-22. Update whenever a tool is installed/removed/reconfigur
 | `esptool` | via the ESP32 arduino-cli core (bundled, not separate), same as raspi |
 | `python3-pymodbus` | 3.8.6 (Debian package, installed 2026-09-11 for the PiGate virtual-unit bench test) — same version as raspi's |
 | `python3-paho-mqtt` | 2.1.0-1 (Debian package, installed 2026-09-14 for the PiGate bench capture tool) |
+| `rsync` | 3.5.0 (Debian package, installed 2026-10-23 for the raspi home backup `~/raspi-backup/`, WISHLIST #75 of ZaxModbus-PS; `rsync.service` daemon stays disabled) |
 | Mosquitto broker | 2.0.21 — PiGate test broker, see `status.md` |
 
 ## Dev-toolchain parity (added 2026-07-22, same day as bring-up)
@@ -57,3 +58,12 @@ day-to-day case). On a genuinely cold compile (new board target, no cached objec
 the gap narrows and futro was slower once (EmonESP classic-ESP32 target) — raspi's
 cache is warmed by months of real use, which partly offsets its weaker CPU on a
 first-ever compile of a given target.
+
+## raspi home backup (2026-10-23)
+
+`~/raspi-backup/` (mode 700: holds the raspi's SSH keys, `gh` token, InfluxDB token, Claude credentials):
+`home/` = `/home/pi` without `.cache`, `.npm`, `.arduino15/packages` + `staging`, `.espressif`, `/esp`, `__pycache__`
+(37,813 files, 7.85 GB, 16:47-16:54 at 20 MB/s); `system/` = dpkg selections, crontab, hostname, hosts, udev rules.
+Repeat from the raspi: `nice -n 19 ionice -c3 rsync -a --bwlimit=20M --exclude=.cache/ --exclude=.npm/
+--exclude=.arduino15/packages/ --exclude=.arduino15/staging/ --exclude=.espressif/ --exclude=/esp/ --exclude=__pycache__/
+/home/pi/ futro:raspi-backup/home/`. Not on a schedule.

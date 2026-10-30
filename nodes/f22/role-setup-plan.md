@@ -76,3 +76,9 @@ Not moved: ESP-IDF (Arduino-only rule; 7.6 GB on the raspi), `.arduino15` copy (
   Step 7 now = Claude Code install + login only.
 - D4 mq1884 broker + zax_directory: **(a) both stay on the raspi; they move with the bench** (owner 2026-10-30).
   Step 8 is empty until the bench moves.
+- Claude setup = raspi (owner request 13:2x, `go`): f22 apt nodejs 20.19.2; raspi `settings.json` copied (+ theme
+  dark-daltonized kept; f22 login file kept as `settings.json.f22-login`), `settings.local.json`, `ponytail/`, `ponytail-modes/`,
+  `.ponytail-active`; jcodemunch-mcp 1.12.9 (pip --user) + `~/.code-index/config.jsonc`, `claude mcp add --scope user`,
+  disabled for `/home/pi` as on the raspi (backup `.claude.json.bak-pre-mcpdisable`). `superclaude` (from `~/.bash_aliases`,
+  home repo) = function on f22. Checks PASS: ponytail-activate rc 0, statusline rc 0, mcp Connected in /tmp + Disabled in ~,
+  `claude -p` OK. Not copied: memory (D3), history, sessions, file-history.

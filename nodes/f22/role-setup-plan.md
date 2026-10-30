@@ -82,3 +82,19 @@ Not moved: ESP-IDF (Arduino-only rule; 7.6 GB on the raspi), `.arduino15` copy (
   disabled for `/home/pi` as on the raspi (backup `.claude.json.bak-pre-mcpdisable`). `superclaude` (from `~/.bash_aliases`,
   home repo) = function on f22. Checks PASS: ponytail-activate rc 0, statusline rc 0, mcp Connected in /tmp + Disabled in ~,
   `claude -p` OK. Not copied: memory (D3), history, sessions, file-history.
+
+## Validation before f22 replaces the raspi on the bench (owner `save` 2026-10-30; not run yet)
+
+| # | Test | PASS when |
+|---|---|---|
+| V1 | Build parity: same commit 64fd72b + 12 host tests on both machines (raspi after 20:02) | same image size + sha256 (or a named difference); 12/12 on both |
+| V2 | Network, read-only, from f22: Influx query, MQTT subscribe on the workstation broker, `/api/sysinfo` of one unit | all three answer; numbers match the same reads from the raspi |
+| V3 | esptool 5.x on f22 (pip venv), read-only USB check: chip id + 4 KB read-flash | chip + MAC = `boards.json` |
+| V4 | Build -> flash -> smoke on one unit from f22, through the identity guard | smoke PASS; catalog update reaches the raspi file over sshfs |
+| V5 | OTA from f22 (`ota_push.py`) | unit reports the new version, image hash matches |
+| V6 | pytest L0 (`-m l0 --unit <X>`) from f22 | same result as the same run from the raspi |
+| V7 | RS-485/Modbus through an adapter on f22's USB (`-m modbus`) | 0 failed reads in the run |
+| V8 | 4 h soak with the unit on f22's USB + one f22 reboot | no USB errors in `dmesg`; port + mount back after the reboot |
+
+V3-V8 need the owner's hands (unit, USB-485 adapter, cables); never Unit_B. After V1-V8 PASS: bench move = catalog
+authority + backup cron, Claude memory (D3), mq1884 + zax_directory (D4).

@@ -159,3 +159,40 @@ Observation: the raspi USB shows no ESP / CH340 / Prolific / FTDI / CP210x devic
 Consequence (fact, no action): an image's sha256 depends on the machine's core-cache compile time, so a release image
 (tied by hash to the gate history) must be built on the machine whose build the gate tested.
 New untracked files from V1: `ZaxModbus-PS/testmode/ZaxModbus_v1.2.22_TESTMODE_newbox_{s3zero,s3eth}.bin` on raspi and f22.
+
+### Unit for V3-V8 (owner 2026-10-30)
+
+Owner: "only unit-A is available for now to be able for modbus and mqtt together"; **`ok Unit_A`** = one-time exception to the
+2026-10-13 standing direction (Unit_A only for #79): Unit_A for the f22 validation, on the `async-mqtt` branch (Unit_A is in
+`units.yaml` only there: newbox_s3zero image, role bench, demo on, `mb_enabled` false, broker = raspi mq1884). V4 re-flashes
+the same 14b image (768564b5); V7 needs a config write (`mb_enabled` + slave address) and a USB-485 adapter on its A/B.
+Observation 14:4x: no serial device on the raspi or f22 (`/dev/serial/by-id` absent on both); Unit_A MAC not in the raspi ARP table.
+
+### Results, hands session with Unit_A (owner: Unit_A + CH340 on f22 USB, 14:31)
+
+| # | Verdict | Seen |
+|---|---|---|
+| V3 USB | PASS | f22 by-id: Unit_A `ttyACM0` (…3C:0F:02:E4:77:30), CH340 1a86:7523 `ttyUSB0`; esptool 5.1.0: ESP32-S3 v0.2, MAC 3c:0f:02:e4:77:30 (= catalog), 4 MB / 2 MB PSRAM; 4 KB read rc 0; `/sec` back within 60 s (no replug); dmesg -71/-110: 0 |
+| V12 per-port | PASS | `power/control=on` for 303a:1001 and 1a86:7523 (no autosuspend) |
+| V4 | PASS | backup first: full 4 MB read (sha 690c2a6a…, app slot = 768564b5), copied to raspi `ZaxModbus-PS/Doc/Async-MQTT/bench-unitA/f22-V4/`; f22 built 675fcf4 + step4b-diag.patch (1339839 B sketch, sha e34f9b4f…), `NEWBOX=1 NEWBOX_FLASH=1 build_s3zero.sh /dev/ttyACM0`: identity guard OK (proj 2, board 5, variant 4mb), 4 writes "Hash of data verified", SMOKE PASS, catalog row Unit_A -> 2026-10-30T14:38:40 seen in the raspi `~/shared/boards.json`; app read-back sha = built sha (e34f9b4f…); `/sec` 3 frames; config unchanged (0 keys differ); fw 1.2.18, boot 930 -> 934 (esptool resets). f22 tree restored to async-mqtt b485fc6, clean |
+| V5 | PASS | f22 `tools/ota_push.py Unit_A …/14b-diag/ZaxModbus_v1.2.18_PS-Z_step4b-diag.bin` (archived 768564b5): "OTA OK — rebooting" 7.5 s, back on v1.2.18; ota_1 read-back at 0x190000 sha = 768564b5 (Unit_A back on its recorded #79 image); catalog row 2026-10-30T14:42:01 on the raspi; `/sec` 3 frames before and after the read-back; config 0 keys differ; boot 935. Side finding: WISHLIST #96 (OTA records firmware "ZaxModbus", USB "ZaxModbus-PS") |
+| V6 | PASS | `pytest -m l0 --unit Unit_A` (async-mqtt b485fc6): f22 1 failed / 60 passed / 0 skipped (263 deselected); raspi (temporary on-disk worktree of async-mqtt, removed) 1 failed / 60 passed / 0 skipped. Same counts. The 1 failure is the same on both: LINT_001, 9 bare asserts in `test_mq_judge_host.py` on the async-mqtt branch (WISHLIST #97), not an f22 difference. Observation: raspi `/tmp` (tmpfs 923 MB) 91 % full; the first worktree attempt in /tmp failed for that reason |
+| V7 | FAIL | Unit_A `mb_enabled` true (addr 20, baud code 5) + restart (boot 937); f22 local `units.yaml` Unit_A `slave: 20`, `mb_host: f22` (not committed, undone after). `pytest -m modbus --unit Unit_A` on f22, CH340 `usb-1a86_USB_Serial-if00-port0` = `ttyUSB0`: 23 failed, 2 passed, 5 skipped (3 "ring too fresh / 0 sec rows", 2 opt-in NET-006/TS-004), 12 min 47 s. First failure: `test_MB_self_id` "Unit_A no FC03 response at addr 20"; others: "no live SEC block", "slave 20: no live ts", `None` responses. dmesg -71/-110: 0. History: nothing found. Restored: `mb_enabled` false + restart (boot 941), yaml undone (tree clean), config = V4 backup (0 keys differ), `/sec` 3 frames |
+| V7 rerun (owner `rerun V7`) | FAIL, same | 15:09:58-15:22:46, same setup and command: 23 failed, 2 passed, 5 skipped (same 23 test names, same first failure "no FC03 response at addr 20"); dmesg -71/-110: 0. Restored: `mb_enabled` false + restart (boot 946), yaml undone, config = V4 backup (0 keys differ) |
+| V13 | PASS (Unit_A USB) / NOT TESTED (CH340) | watcher 15:38:38 (0.5 s poll of by-id) + dmesg. Unit_A USB 3 replugs: by-id `…3C:0F:02:E4:77:30-if00` back each time, 15:39:39.2 / 15:40:06.8 / 15:40:34.8, within 1-2 s of the kernel "new full-speed USB device" line (15:39:38 / 15:40:06 / 15:40:34; device numbers 6, 7, 8); boot 946 -> 949; `/sec` 3 frames after. CH340: no disconnect seen in the watcher log or dmesg up to the owner's `done`. dmesg -71/-110/unable to enumerate: 0 |
+
+### Next (owner 2026-10-30 ~16:00): f22 moves to the bench, PS-E002 (not at the grid place) on f22's USB
+
+Order (owner: "v13 after v8"): 1 f22 up at the bench (ping/SSH, mount 24 boards, by-id PS-E002 + CH340, dmesg 0 errors,
+PS-E002 found by MAC); 2 f22 ZaxModbus-PS back to `main` (PS-E002 in `units.yaml`, slave 31); 3 V7 with PS-E002 (positive
+control FC03 0x0014 = 31 first; `mb_host: f22` per G2); 4 V8 4 h soak of PS-E002 from f22 + one f22 reboot; 5 V13 CH340 replug.
+V8 on Unit_A dropped. Unit_A leaves f22 USB on its recorded image 768564b5, config = V4 backup.
+
+### V7 with PS-E002 at the bench (owner `go`, 16:0x-16:25)
+
+| Step | Verdict | Seen |
+|---|---|---|
+| f22 up at the bench | PASS | ping 0.35 ms, mount 24 boards, by-id PS-E002 (…E8:F6:0A:84:9D:EC) + CH340, dmesg 0 errors; PS-E002 by ETH MAC at .128 (WiFi .132 silent), fw 1.2.22, boot 42, `mb_enabled` true / 31 / code 5, demo off, eth_mode 1 |
+| Positive control (`a7-modbus-20261028/mbblock.py`, CH340 by-id, 31, 38400, 200) | PASS | 200/200 answered, 42/44 ms (raspi 10-28: 200/200, 41-47 ms); 0x0200 / 0x0300 exception 2; 4 energies MATCH `/api/data` |
+| `mb_host: f22` (G2) | done | f22 ZaxModbus-PS main aa5066c (unpushed) |
+| `pytest -m modbus --unit PS-E002` | FAIL (4) | 16:17:16-16:24:53: 4 failed, 24 passed, 2 skipped (opt-in NET-006, TS-004). NB_004 "echo counters moved: echo_extra 0 -> 40"; TS_001 "ts_source not Modbus after accepted push" (1, expected 2); TS_006 "clock should be unset with NTP disabled"; TS_007 "0x0512 2 after a manual time, expected 0". dmesg 0 errors. Raspi pytest baseline for this unit: none (NOT TESTED). History: 2026-10-15 echo_extra counters (1.2.10), no fix for these; TS: nothing found. After: config = 10-29 run start config (0 keys differ), boot 48, MQTT connected. Logs: `ZaxModbus-PS/Doc/new-hardware/PS-E002/f22-V7-20261030/` |

@@ -135,3 +135,16 @@ V6, V7, V13; then V8 overnight. Never Unit_B. Nothing on the raspi's USB before 
 - Catalog authority + backup cron to f22 (cron runs once, file appears on ws); Claude memory (D3); mq1884 + zax_directory (D4).
 - Claude on f22 started in `~` loads MEMORY.md (`-home-pi`), CLAUDE.md and the `github-workflows` skill.
 - `units.yaml` `mb_host` for PS-Z001 -> f22's hostname (owner's word needed).
+
+### Results, no-hands tests (2026-10-30 ~13:45, owner `go`)
+
+| # | Verdict | Seen |
+|---|---|---|
+| V2 | PASS (part) | f22 got `~/.ssh/config` (ws, futro) + `~/.zaxmodbus_influx_token` from the raspi (ws ED25519 key = raspi's zt00mcPy…). `influx.power_points("PS-E002", 09:00-10:00 UTC)`: 10806 points, same sha d54c75ee81b2 on both; `mqtt.count_sec_frames("zax_849DEC", 15)` at the same time: 17 / 17. Unit `/api/sysinfo` read: after 20:02 (PS-E002 run) |
+| V3 a-c | PASS | f22 apt `python-is-python3`, pip --user esptool 5.1.0: (a) export.sh absent -> `/usr/bin/python -m esptool` 5.1.0; (b) `identity_guard.ESPTOOL` = bundled 5.1.0 (raspi 5.1.0 too); (c) `python3 -m esptool` 5.1.0. `~/identity_guard.py` was missing on f22: it is NOT in git on the raspi; copied. USB part: hands session |
+| V9 | PASS | mount stopped: `list` and `update` rc 1 with "ERROR: … is missing (sshfs mount down?)"; 0 entries behind the mount; restarted: 24 boards |
+| V10 | FAIL (1 of 3) | `ZaxModbus-PS/.git/hooks/pre-commit` symlink absent on f22 (fresh clone; the raspi has it). In a scratch clone with the hook: FW_VERSION 9.9.99 commit refused (rc 1, INDEX.md message). `push --dry-run` 7/7 OK; home repo clean |
+| V11 | PASS | both synced, both `2.debian.pool.ntp.org` (different servers), offset to server raspi +2 ms, f22 +9 ms; over ssh vs raspi: f22 +92 ±107 ms, ws +132 ±142 ms (< 500 ms) |
+| V12 | PASS (config) / NOT TESTED (8 h idle, per-port USB) | sleep targets static/inactive, logind defaults (IdleAction ignore), no desktop packages, ModemManager + brltty not installed; usbcore autosuspend 2 s (= raspi). Per-port `power/control` needs the devices plugged (hands session); 8 h idle: check the journal tomorrow |
+
+Observation: the raspi USB shows no ESP / CH340 / Prolific / FTDI / CP210x device right now (sysfs vendor scan, 13:45).

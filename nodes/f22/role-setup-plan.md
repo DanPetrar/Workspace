@@ -83,18 +83,46 @@ Not moved: ESP-IDF (Arduino-only rule; 7.6 GB on the raspi), `.arduino15` copy (
   home repo) = function on f22. Checks PASS: ponytail-activate rc 0, statusline rc 0, mcp Connected in /tmp + Disabled in ~,
   `claude -p` OK. Not copied: memory (D3), history, sessions, file-history.
 
-## Validation before f22 replaces the raspi on the bench (owner `save` 2026-10-30; not run yet)
+## Validation before f22 replaces the raspi on the bench (owner `save` 2026-10-30; Fable additions merged on the owner's `merge`; not run yet)
 
-| # | Test | PASS when |
-|---|---|---|
-| V1 | Build parity: same commit 64fd72b + 12 host tests on both machines (raspi after 20:02) | same image size + sha256 (or a named difference); 12/12 on both |
-| V2 | Network, read-only, from f22: Influx query, MQTT subscribe on the workstation broker, `/api/sysinfo` of one unit | all three answer; numbers match the same reads from the raspi |
-| V3 | esptool 5.x on f22 (pip venv), read-only USB check: chip id + 4 KB read-flash | chip + MAC = `boards.json` |
-| V4 | Build -> flash -> smoke on one unit from f22, through the identity guard | smoke PASS; catalog update reaches the raspi file over sshfs |
-| V5 | OTA from f22 (`ota_push.py`) | unit reports the new version, image hash matches |
-| V6 | pytest L0 (`-m l0 --unit <X>`) from f22 | same result as the same run from the raspi |
-| V7 | RS-485/Modbus through an adapter on f22's USB (`-m modbus`) | 0 failed reads in the run |
-| V8 | 4 h soak with the unit on f22's USB + one f22 reboot | no USB errors in `dmesg`; port + mount back after the reboot |
+Source of the additions: `validation-review-fable.md` (unedited).
 
-V3-V8 need the owner's hands (unit, USB-485 adapter, cables); never Unit_B. After V1-V8 PASS: bench move = catalog
-authority + backup cron, Claude memory (D3), mq1884 + zax_directory (D4).
+### Gaps to decide before the hands session (owner decides fix or accept)
+
+- G1 esptool: the flash path calls three esptools: `build_*.sh` sources `~/esp/esp-idf/export.sh` then `python -m esptool`
+  (ESP-IDF not on f22: fails, or Debian esptool 4.7 if `python` exists); `identity_guard.py` uses the bundled one in
+  `~/.arduino15/packages/esp32/tools/esptool_py/*/`; `flash_guard.py` uses `python3 -m esptool`.
+- G2 gate skip: `units.yaml` PS-Z001 `mb_host: esp-devbox64`; `gate.py` skips a line when the hostname differs, so on f22
+  the PS-Z line is skipped, not run.
+- G3 catalog write lost: mount down -> `~/boards.json` dangles -> `load_catalog()` returns {} -> `save_catalog()` writes a
+  local `~/pi-raspi-mnt/boards.json` with one MAC, hidden when the mount returns. futro has the same setup.
+- Missing on f22 (outside git): `~/.zaxmodbus_influx_token` (influx.py, phase2/* hard-coded path); `~/.ssh/config` hosts
+  `ws` and `futro` (influx.py `ssh ws`, backup cron `ws:`).
+
+### Tests
+
+| # | Test | PASS when | Hands |
+|---|---|---|---|
+| V1 | Build parity on both machines, same commit: `build_s3zero.sh`, `build_s3eth.sh` (NEWBOX) and `build_testmode.sh`, `--build-only`; 12 host tests; record the 6 library versions + ZaxCommon commit (27cde02) | equal sha256 per image (a difference only with its cause found before V4); 12/12 on both | no |
+| V2 | Network read-only from f22 through the zaxtest code (`influx.py`, `mqtt.py`, `http.py`): Influx query, MQTT subscribe on the workstation broker, `/api/sysinfo` of one unit | all answer; numbers match the same reads from the raspi | no |
+| V3 | The three esptools of G1 as the scripts call them: (a) `bash -c 'source ~/esp/esp-idf/export.sh; command -v python; python -m esptool version'`, (b) the `identity_guard.py` bundled path, (c) `python3 -m esptool version`; then chip id + 4 KB read-flash | all three 5.x, or the owner's written choice; chip + MAC = `boards.json` | USB part |
+| V4 | Build -> flash -> smoke on one unit from f22, through the identity guard | smoke PASS showing the new version (otadata reset); hash on the unit = built sha256; version + time written by f22 appear in the raspi `~/shared/boards.json` | yes |
+| V5 | OTA from f22 (`ota_push.py`) | unit reports the new version, image hash matches | yes |
+| V6 | pytest L0 (`-m l0 --unit <X>`) from f22 | passed, failed AND skipped counts = the raspi run; more skips = FAIL | yes |
+| V7 | RS-485/Modbus through an adapter on f22's USB (`-m modbus`) | 0 failed reads; 0 lines skipped by `gate.py` (G2); Modbus cases run = the raspi run; adapter named by `/dev/serial/by-id` | yes |
+| V8 | 4 h soak with the unit on f22's USB, started with `setsid nohup` over SSH then logout; one f22 reboot | run survived the logout; no suspend (V12); no USB errors in `dmesg`; port + mount back after the reboot | yes |
+| V9 | Catalog mount loss (G3): stop `sshfs-boards.service`, `flash_guard.py list`, start it again | loud error, no 0-board list (if not: owner decides a fix before V4); no local `~/pi-raspi-mnt/boards.json` left behind the mount | no |
+| V10 | Git from f22: `ZaxModbus-PS/.git/hooks/pre-commit` symlink present; in a scratch clone stage a FW_VERSION change without a Doc/INDEX.md row; `git push --dry-run` on each repo | hook refuses; home repo `git status` clean (skip-worktree); every dry-run OK | no |
+| V11 | Clock: `timedatectl`, offset to ws and to the raspi | synced; same NTP source as the raspi; offset < 0.5 s | no |
+| V12 | Unattended safety: suspend targets + idle suspend; ModemManager / brltty; USB `power/control` of the ESP and CH340 | no suspend after 8 h idle; nothing else opens `ttyACM*`/`ttyUSB*`; no USB autosuspend on these ports | no |
+| V13 | USB replug: unit USB and CH340, 3 times each | same by-id name back within 5 s; no `-71`/`-110`/`unable to enumerate` in `dmesg` | yes |
+| V14 | Written one-page rollback (symlink, cron, sshfs direction) before the authority moves | the raspi still builds and lists the catalog after the move, until the owner releases it | no |
+
+Order: (1) no hands: V1, V2, V3 a-c, V9, V10, V11, V12, with G1-G3 fixed or decided; (2) one hands session: V3 USB, V4, V5,
+V6, V7, V13; then V8 overnight. Never Unit_B. Nothing on the raspi's USB before PS-E002 is judged (after 20:02).
+
+### On the day the bench moves (after V1-V14 PASS)
+
+- Catalog authority + backup cron to f22 (cron runs once, file appears on ws); Claude memory (D3); mq1884 + zax_directory (D4).
+- Claude on f22 started in `~` loads MEMORY.md (`-home-pi`), CLAUDE.md and the `github-workflows` skill.
+- `units.yaml` `mb_host` for PS-Z001 -> f22's hostname (owner's word needed).

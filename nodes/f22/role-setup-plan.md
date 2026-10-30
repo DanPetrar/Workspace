@@ -92,10 +92,19 @@ Source of the additions: `validation-review-fable.md` (unedited).
 - G1 esptool: the flash path calls three esptools: `build_*.sh` sources `~/esp/esp-idf/export.sh` then `python -m esptool`
   (ESP-IDF not on f22: fails, or Debian esptool 4.7 if `python` exists); `identity_guard.py` uses the bundled one in
   `~/.arduino15/packages/esp32/tools/esptool_py/*/`; `flash_guard.py` uses `python3 -m esptool`.
+  **Decision G1 (owner 2026-10-30, "as you recommend"): `python-is-python3` + esptool 5.1.0 via `pip --user` on f22 (= the
+  bundled version of core 3.3.7); no ESP-IDF; no script change. Installed in V3.** Looked up: raspi export.sh esptool 5.3.dev,
+  bundled 5.1.0 on both, `python3 -m esptool` missing on both.
 - G2 gate skip: `units.yaml` PS-Z001 `mb_host: esp-devbox64`; `gate.py` skips a line when the hostname differs, so on f22
   the PS-Z line is skipped, not run.
+  **Decision G2 (owner 2026-10-30, `a`): in V7, when the owner moves the CH340 to f22, `units.yaml` PS-Z001 `mb_host` ->
+  `f22` (ZaxModbus-PS commit) and the gate runs from f22; back to `esp-devbox64` if the adapter goes back.** Looked up:
+  `mb_host` is read only by `gate.py` (loud skip); `pytest -m modbus` ignores it.
 - G3 catalog write lost: mount down -> `~/boards.json` dangles -> `load_catalog()` returns {} -> `save_catalog()` writes a
   local `~/pi-raspi-mnt/boards.json` with one MAC, hidden when the mount returns. futro has the same setup.
+  **Decision G3 (owner 2026-10-30, `a`): fixed in the home repo: `load_catalog()` exits with an error on a dangling link
+  (all writers go through flash_guard.py, OTA too); self-check in `test_flash_guard.py` (fails on the old code, passes on
+  the new). V9 checks it on f22 after the pull. futro has its own copy of flash_guard.py: not updated (separate question).**
 - Missing on f22 (outside git): `~/.zaxmodbus_influx_token` (influx.py, phase2/* hard-coded path); `~/.ssh/config` hosts
   `ws` and `futro` (influx.py `ssh ws`, backup cron `ws:`).
 

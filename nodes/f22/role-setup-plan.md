@@ -148,3 +148,14 @@ V6, V7, V13; then V8 overnight. Never Unit_B. Nothing on the raspi's USB before 
 | V12 | PASS (config) / NOT TESTED (8 h idle, per-port USB) | sleep targets static/inactive, logind defaults (IdleAction ignore), no desktop packages, ModemManager + brltty not installed; usbcore autosuspend 2 s (= raspi). Per-port `power/control` needs the devices plugged (hands session); 8 h idle: check the journal tomorrow |
 
 Observation: the raspi USB shows no ESP / CH340 / Prolific / FTDI / CP210x device right now (sysfs vendor scan, 13:45).
+
+### Results after the PS-E002 stop (owner `stop`, run stopped 14:01:40)
+
+| # | Verdict | Seen |
+|---|---|---|
+| V1 | PASS (named difference, cause found) | 64fd72b on both, 4 images (s3zero, s3eth, TESTMODE s3zero, TESTMODE s3eth): rc 0, sizes equal (1233347 / 1328127 / 1241527 / 1336315 B sketch). sha256 differ; per pair 69-72 bytes: 32 = app-descriptor ELF sha (0xb0-0xcf), 33 = appended image hash, 4-7 = the core's "Software Info" compile date/time only (raspi e.g. "15:53:21 Oct 28 2026", f22 "12:58:11 Oct 30 2026" = when each machine's core cache was compiled). Host tests 12/12 on the raspi too (same check counts as f22) |
+| V2 unit | PASS | PS-E002 by ETH MAC ee:f6:0a:84:9d:ed at .128 (ARP on both); `/api/sysinfo` from both: fw 1.2.22, boot_count 41 |
+
+Consequence (fact, no action): an image's sha256 depends on the machine's core-cache compile time, so a release image
+(tied by hash to the gate history) must be built on the machine whose build the gate tested.
+New untracked files from V1: `ZaxModbus-PS/testmode/ZaxModbus_v1.2.22_TESTMODE_newbox_{s3zero,s3eth}.bin` on raspi and f22.

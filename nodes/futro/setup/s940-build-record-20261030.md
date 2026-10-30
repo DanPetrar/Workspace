@@ -19,3 +19,22 @@ seconds). Committed here: `s940-preseed.template.cfg`, `s940-pickdisk.sh`.
 Step 1 (10:39, owner `plugged`): stick `usb-Generic_Flash_Disk_2E381EA9-0:0` = sda, 8054112256 B, USB, removable, only sd* disk; held a Debian 13.7.0 image
 not equal to the download (first 792723456 B sha256 37e0c126…); not mounted; USB log clean.
 Step 7 (owner `write`): dd 10:42:19-10:46:12, conv=fsync; caches dropped; read-back of 792002560 B = 9cd4cda9… = s940.iso: **WRITE PASS**; USB log clean.
+
+## T1 test install on the factory 32 GB SSD (D3 yes) — PASS
+
+Owner `f22; 4C:52:62:A6:CE:C6 ; 192.168.20.131`. ARP on the raspi: .131 = 4c:52:62:a6:ce:c6 (eno1). SSH key login as pi from the raspi OK.
+hostname f22; Debian 13.7, kernel 6.12.113+deb13-amd64; UEFI (BootCurrent 0005; eLux + Diagnostic entries still in NVRAM).
+Disk `sda` 29.8G SATA `DEM24-32GM41BC1DC-PC`: sda1 487M vfat /boot/efi (partman 512 MB = 10^6 units), sda2 3.8G swap, sda3 25.5G ext4 /.
+pi: uid 1000, groups incl. sudo, plugdev (no dialout: role setup). authorized_keys 2 lines, .ssh 700 / file 600, owner pi.
+`/etc/issue.d/s940.issue` = Host f22, MAC 4c:52:62:a6:ce:c6, IP \4. SSH offers publickey,password (D4 on).
+Europe/Bucharest, NTP active + synchronized, en_GB.UTF-8, keyboard us; apt sources deb.debian.org trixie + security + updates, main non-free-firmware. RAM 3690 MB.
+Not checked: login from futro's key; removable EFI path `EFI/BOOT` (needs sudo); whether other installer questions appeared; power-off at the end (owner's eyes).
+
+## Final install on the 220 GB SSD — PASS
+
+Owner: `new ip 192.168.20.132 on 220gb`; he will reserve a fixed IP for the MAC on his DHCP. ARP: .132 = 4c:52:62:a6:ce:c6.
+Old .131 host key removed from the raspi known_hosts; new ED25519 key accepted.
+hostname f22, Debian 13.7; `sda` 223.6G SATA `WDC WDS240G2G0B-00EPW0`: sda1 487M vfat /boot/efi, sda2 3.8G swap, sda3 219.3G ext4 /
+(215G, 1.3G used). pi in sudo; .ssh 700 pi, authorized_keys 600 pi, 2 keys; SSH publickey,password; NTP synchronized.
+Factory 32 GB SSD (DEM24-32GM41BC1DC-PC) out, holds the T1 test install.
+f22 fixed IP 192.168.20.222 (owner DHCP reservation for 4c:52:62:a6:ce:c6), checked by ARP + SSH.

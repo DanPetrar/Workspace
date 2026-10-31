@@ -151,3 +151,8 @@ checks pass.
   rc 0: 1,328,400 B, sha256 53cd4892…, built 12:06:10, string 1.2.23 (differs from 29a2b5db by the compile time, V1); nothing in
   `ota/`; ZaxModbus-PS `git status`: no tracked file changed. V14 "raspi still builds and lists the catalog": PASS.
 - Times of S2-S11 corrected 12:07 from file and commit times (my first entries had guessed times).
+- S13 (owner `go`, ~12:15): close note `2026-10-31-switch-close.md`; memory lines (MEMORY.md, `project_new_futro_s940.md`: IP = DHCP);
+  pushed Workspace a583bbf, ZaxModbus-PS 18bc96a, home 0f065a3; f22 pulled, 7 repos HEAD = origin (home 0f065a3, ZaxModbus-PS 18bc96a,
+  ZaxModbus a677d17, PiGate a30a2c7, Workspace a583bbf, Workstation a3dfbd8, EnergyCalibrator b279778); futro pulled. Memory copied
+  raspi -> f22 (`rsync -a`; f22 had no memory folder): 175 = 175 files, `diff -r` empty. Raspi memory frozen from here. PASS.
+  **Switch done** (S6 nothing by B3). Not yet seen: the first Claude session on f22.

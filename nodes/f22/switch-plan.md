@@ -24,7 +24,7 @@ session on f22 starts from its own memory with all repos at origin.
 | `units.yaml` | main: PS-Z001 `mb_host: esp-devbox64` (= raspi, line 16); PS-E002 `mb_host: f22` (line 28). async-mqtt branch: PS-Z001 `esp-devbox64` at line 18 | `units.yaml`, Fable |
 | Claude memory | raspi `~/.claude/projects/-home-pi/memory`: 175 files, 1.2 MB; f22 same path exists, 0 files; same user and home (`/home/pi`), so paths in memory stay valid | `ls`, `du` |
 | f22 packages | no `mosquitto` (Debian candidate 2.0.21 = raspi 2.0.21), no `~/ZaxEnergySurvey`; raspi has no `sshfs`; f22 `cron` active | `dpkg -l`, `which`, Fable |
-| f22 address | `iface eno1 inet dhcp` (dhcpcd), no static entry; **router reservation for f22's MAC: owner to confirm**. raspi .225 is static | Fable |
+| f22 address | `iface eno1 inet dhcp` (dhcpcd), no static entry; **router reservation on .222 (owner 2026-10-31)**. raspi .225 is static | Fable |
 | f22 USB (observation) | `usb usb2-port2: Cannot enable. Maybe the USB cable is bad?` every ~4 s since the 09:14 reboot (885 lines by ~10:13), 0 in the previous boot; usb2 = the 5000M root hub; PS-E002 + CH340 are on bus 1. f22 xhci controller `0000:00:15.0` (the raspi's is `0000:01:00.0`) | `dmesg`, Fable |
 | Files outside git on the raspi | ZaxModbus-PS: 10 untracked paths (run data `grid-20261028/`, `grid-eth10h-20261029/`, `eth-mode-test-round2/backup/`, `Doc/Async-MQTT/bench-unitA/3-backup/`, the 4 MB `f22-V4/unitA_full_4MB_before.bin`) + `weekend-tests-20261031.md` modified, not committed; Workspace 1 untracked file; outside git: `~/mq1884`, `~/pigate-bench`, `~/ramp-an*`, `~/shared/unitA_*.json` | `git status`, Fable |
 | Other references to the raspi | Workstation docs `INFRASTRUCTURE.md`, `inventory.md`, `COORDINATION.md`, `infrastructure/health-pi.sh`; Workspace `infrastructure/zax_parser.py` (`BROKER_HOST .225:1883`, a document copy; ws runs `/opt/zax-parser`); `nodes/INDEX.md`; CLAUDE.md role split and rule 5 | grep, Fable |
@@ -64,7 +64,7 @@ S11 (after D) -> S12 -> S13. Time from the work: ~1 h 30 min of steps after row 
 - A (S7): zax_directory (retired, 0 clients, nothing refers to 8088) — stop it on the raspi and not move it, or move it (D4).
 - C (S8): PS-Z001 `mb_host` -> f22.
 - D (S11): files outside git — rsync to f22, or leave on the standby raspi.
-- Also to confirm: a router DHCP reservation for f22 (its address is written into futro, the raspi unit, CLAUDE.md, INDEX).
+- Confirmed (owner 2026-10-31): f22 has a router DHCP reservation on .222 (its address is written into futro, the raspi unit, CLAUDE.md, INDEX).
 - Earlier decision kept: the system mosquitto on 1883 stays on the raspi (0 clients; nothing breaks while the raspi is powered).
 
 ## S9 proposal (exact text)
@@ -93,7 +93,7 @@ the session close.
   (`role-setup-plan.md` G3, "separate question"). Unchanged by this plan.
 - The ws backup is one file overwritten each night: a bad catalog replaces the only good backup the next night (dated copies =
   owner's choice; no change proposed).
-- f22's address is from DHCP until a reservation is confirmed.
+- (closed 2026-10-31) f22's DHCP address has a router reservation on .222 (owner).
 
 ## V14 rollback (one page; run in reverse order, each line undoes one step)
 

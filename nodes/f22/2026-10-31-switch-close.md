@@ -26,7 +26,7 @@ V14 rollback); Fable review `switch-plan-review-fable.md` (merged). Supersedes `
 
 1. Weekend list `ZaxModbus-PS/Doc/new-hardware/weekend-tests-20261031.md`: rows 5-7 need the grid place (owner moves PS-E002);
    row 8 waits for the owner's V7 choices (TS_007 = #98 fix, TS_001 / TS_006 rewrite, NB_004 rule).
-2. Owner to confirm: a DHCP reservation for f22 (its address is in futro's ssh config, the raspi unit, CLAUDE.md, INDEX).
+2. Done (owner 2026-10-31): f22 has a DHCP reservation on .222 (its address is in futro's ssh config, the raspi unit, CLAUDE.md, INDEX).
 3. #79 resume notes: Unit_A `mqtt_host` stays .225:1884 (broker on the raspi); the async-mqtt branch `units.yaml` PS-Z001 still `esp-devbox64`.
 4. Open from earlier: D3 option A text (restore depth in the user documents); S3-Zero 1.2.23 image on PS-Z001 when back.
 

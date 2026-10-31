@@ -133,7 +133,7 @@ checks pass.
 - S5 (owner `go`, 11:39): f22 crontab = `15 0 * * * rsync -a /home/pi/shared/boards.json ws:/workspace/backups/boards-json/boards.json`;
   run once by hand rc 0: ws `boards.json` now a regular file 14,107 B, sha c8710b01 (the dangling Aug 14 link replaced); raspi
   backup line removed, raspi crontab = pitemp only. PASS.
-- Decision B3 (owner `a`): mq1884 stays on the raspi (standby, powered); Unit_A keeps `mqtt_host` .225:1884. S6 = nothing.
+- Decision B3 (owner `a`): mq1884 stays on the raspi (standby, powered); Unit_A keeps `mqtt_host` .225:1884. S6 = nothing. Replaced by F3 (1) = b below ("powered" no longer holds).
   Replaces D4 for mq1884.
 - Decision A (owner `a`): zax_directory stopped on the raspi, not moved (replaces D4 for it).
 - S7 (owner `go`, 11:48): before `GET /` on 8088 = HTTP 200; `disable --now zax_directory` on the raspi: inactive, disabled, port
@@ -156,3 +156,31 @@ checks pass.
   ZaxModbus a677d17, PiGate a30a2c7, Workspace a583bbf, Workstation a3dfbd8, EnergyCalibrator b279778); futro pulled. Memory copied
   raspi -> f22 (`rsync -a`; f22 had no memory folder): 175 = 175 files, `diff -r` empty. Raspi memory frozen from here. PASS.
   **Switch done** (S6 nothing by B3). Not yet seen: the first Claude session on f22.
+- F1 (`switch-finish.md`, 13:30, f22): first Claude session on f22 started from the close note. Memory raspi -> f22 `rsync -anci --delete`:
+  0 lines (control against an empty folder: 176 lines), 175 = 175 files; MEMORY.md line 99 "f22 = bench machine" present; newest raspi
+  memory file 13:01. PASS. The note's `rsync -anc` has no `-i`, so it prints nothing even with differences; use `-anci` (also in F4 (4)).
+  Raspi `claude` PIDs 1833542 + 1935138 still run (F4 (4)).
+- F2 (owner `go`, 13:32:02, f22): futro ed25519 fingerprint keyscan = futro's key file (`SHA256:LyZhiVNz…Lw`, read over the raspi);
+  `ssh -o BatchMode=yes futro hostname` = futro. PASS. `known_hosts` 12 -> 16 lines, not the 1 line on the card: keyscan's comment line + the
+  ed25519 line (my 1-line guard did not stop it, not looked into), then ssh itself added futro's rsa + ecdsa keys at the first connection, hashed
+  (lines 15-16, sent over the checked connection). All kept. Before: scratchpad copy of this session only.
+- F3 (1) (owner `b`, 2026-10-31): mq1884 stays on the raspi; the raspi is powered on again when #79 resumes. While it is off, Unit_A has no
+  MQTT broker. Nothing moved, nothing installed on f22. #79 note: `ZaxModbus-PS/Doc/Async-MQTT/2026-10-31-mq1884-raspi-off.md`.
+- F3 (2) (owner `a`, 13:38:57-13:39:36): `~/ramp-an`, `ramp-an2`-`6`, `~/pigate-bench` copied raspi -> f22 (`rsync -a`, same paths; replaces decision D
+  for these). Bytes (`du -sb`) and file counts equal on all 7 (files 5, 5, 6, 5, 8, 18, 437), `rsync -anci` 0 differences. Raspi copies kept. PASS.
+  Owner, same reply: "the pigate will no longer be available; pc-gate will remain the on focus for Gate project."
+- F4 first run (13:40-13:41, read-only, from f22): **not all PASS, no announcement.** (4) FAIL: raspi `claude` PIDs 1833542 + 1935138 still run; 0 raspi memory
+  files newer than 13:01:10. (1) 16 repos found (13 + home, esp-idf, hello_world): only on the raspi ZaxModbus 2 commits + 19 untracked, ZaxEnergySurvey 6,
+  EmonESP V001 1; ZaxModbus-PS 11 untracked all equal on f22 (`rsync -anci`). Not in git and not on f22, by top-level name: `mq1884`, `EmonESP_MultiIO*`,
+  `ZaxEnergySurvey`, `ArduinoIDE_project`, `PiGate-spec-lab`, `s940-build`, `esp`, `.espressif`, CLAUDE.md / flash_guard `.bak` files. (2) PASS: f22 list 24, futro
+  mount `bench:/home/pi/shared` + 24, sha f22 = ws c8710b01. (3) PASS: 0 clients on 1883/1884; ssh peers .222 (this check) + fe80::d0c1:9f1b:8733:7a22 (pts/0 since
+  10-20, not identified). (5) PASS: crontab pitemp only, only `sshfs-boards` enabled.
+- F4 re-run (13:51:48-13:51:55, after the owner's "closed"): (4) still FAIL: PID 1935138 gone; PID 1833542 runs, state `Tl` (stopped job, Ctrl-Z) on pts/0, parent bash
+  1374863, 0 network connections. 0 raspi memory files newer than 13:01. (1), (2), (3) same as the first run.
+- F4 final (owner `kill`, 13:55:52): PID 1833542: SIGTERM + SIGCONT at about 13:54 did not end it (`Dl`, then `Tl` again), SIGKILL ended it. All PASS: (1) raspi only ZaxModbus 2 +
+  19 untracked, ZaxEnergySurvey 6, EmonESP V001 1, plus the folders of the first run; (2) f22 24, futro `bench:` 24, sha f22 = ws c8710b01; (3) 0 clients on 1883/1884, ssh peers
+  .222 + fe80::d0c1:9f1b:8733:7a22; (4) no `claude`, 0 raspi memory files newer than 13:01, f22 differs only by its own later write (MEMORY.md + 1 new file); (5) pitemp only, `sshfs-boards` only.
+  Power-down announcement sent to the owner. F5 runs when he says the raspi is off.
+- Raspi off (owner `poweroff`, 13:57:36, `sudo -n poweroff` from f22, rc 0): no ping answer at 13:57:47. Supply cut = the owner's.
+- F5 same day (13:57:54): f22 list 24; futro mount `bench:/home/pi/shared`, list 24. INDEX raspi, futro, f22 rows updated; memory line. PASS so far.
+  Open: next-morning check 2026-11-01 (`journalctl -u cron` 00:14-00:16 rsync CMD line, sha256 f22 = ws); CLAUDE.md line 5 text after `ok`.

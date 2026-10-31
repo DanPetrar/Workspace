@@ -24,6 +24,7 @@ V14 rollback); Fable review `switch-plan-review-fable.md` (merged). Supersedes `
 
 ## Next (on f22)
 
+0. Switch finish: `nodes/f22/switch-finish.md` (F1-F6, raspi power-down announcement).
 1. Weekend list `ZaxModbus-PS/Doc/new-hardware/weekend-tests-20261031.md`: rows 5-7 need the grid place (owner moves PS-E002);
    row 8 waits for the owner's V7 choices (TS_007 = #98 fix, TS_001 / TS_006 rewrite, NB_004 rule).
 2. Done (owner 2026-10-31): f22 has a DHCP reservation on .222 (its address is in futro's ssh config, the raspi unit, CLAUDE.md, INDEX).

@@ -184,3 +184,4 @@ checks pass.
 - Raspi off (owner `poweroff`, 13:57:36, `sudo -n poweroff` from f22, rc 0): no ping answer at 13:57:47. Supply cut = the owner's.
 - F5 same day (13:57:54): f22 list 24; futro mount `bench:/home/pi/shared`, list 24. INDEX raspi, futro, f22 rows updated; memory line. PASS so far.
   Open: next-morning check 2026-11-01 (`journalctl -u cron` 00:14-00:16 rsync CMD line, sha256 f22 = ws); CLAUDE.md line 5 text after `ok`.
+- F5 next-morning check, read 2026-11-01 18:49: PASS. `CRON[13667]: (pi) CMD (rsync -a /home/pi/shared/boards.json ws:/workspace/backups/boards-json/boards.json)` at 00:15:01; sha256 f22 `~/shared/boards.json` = ws `/workspace/backups/boards-json/boards.json` = `11d31c7e0b22466c…`. CLAUDE.md line 5 text done 10-31 (home ad748bc).

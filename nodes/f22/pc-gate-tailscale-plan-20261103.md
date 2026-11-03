@@ -110,4 +110,4 @@ The SSH session may drop when tailscaled restarts. Reconnect, then check `system
 - Review 15: futro as a second client (`tag:bench`).
 
 ## Results
-(filled in per step)
+- **Step 1 PASS (2026-11-03):** Tailscale 1.104.5 on f22 and pc-gate; `tailscaled` enabled + active on both; `/etc/resolv.conf` unchanged on both (copies in `~/resolv.conf.pre-tailscale`). pc-gate has no `curl` (first try stopped, keyring file left empty): the two repo files were copied from f22 instead (sha256 keyring `3e03dacf…`, list `5a1b21b3…`, same on both). Not logged in yet.

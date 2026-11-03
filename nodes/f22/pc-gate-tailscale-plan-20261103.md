@@ -40,6 +40,7 @@ Owner `yes` 2026-11-03: the Windows machines and the f22 <-> pc-gate link are is
 - `tests` block (review 12): `{"src":"tag:bench","accept":["tag:gate:22"]}` and `{"src":"<owner e-mail>","deny":["tag:gate:22","tag:bench:22"]}`, so a later save that cuts f22 off or lets a Windows machine in is refused. If the page refuses the block itself, it is removed and noted here;
 - every other part of the pasted policy kept as it was, and one line listing what was replaced.
 Owner replaces the text, saves (2.4), and checks one Windows machine (2.5).
+- **Result 2026-11-03:** policy saved by the owner, no error (allow-all replaced; tagOwners `autogroup:admin` + `danpetrar@gmail.com`; tests block accepted). 2.5 Windows check: NOT TESTED (only one Windows machine at the owner's location); owner `3 go`, check later.
 
 ### Step 3 (me): join both, ~2 min
 The join waits for the login, so it runs detached from the SSH session (review 4); the link is read from its log:
@@ -70,21 +71,28 @@ Owner steps 4.1-4.5. Reply `approved`.
 - **Gateway service check (review 8): NOT TESTED** (no gateway service runs on pc-gate now). Result line per check in this file.
 
 ---
+- **Result 2026-11-03 (step 3-5):** owner `approved`. pc-gate 100.87.25.19 `tag:gate`, f22 100.78.87.77 `tag:bench`; key expiry off on both; ts-up exit 0, stopped; `/etc/resolv.conf` unchanged on both; `ssh pc-gate-ts hostname` = GW3M710 (direct, via 192.168.20.90:41641); pc-gate -> f22:22 blocked (timeout 5 s). `~/.ssh/config` backup `config.bak-pre-tailscale-20261103`.
+- **Result 2026-11-03 update test:** owner `update go`. `ts-upgrade` started over `pc-gate-ts`, detached; exit 0, active (exited); apt: tailscale already newest 1.104.5, 0 upgraded, so tailscaled did not restart and a session drop was NOT TESTED; status after: online, direct. Unit stopped. Isolation ping to a Windows 100.x and pc-gate reboot (step 5 list): not run yet.
+- **Result 2026-11-03 reboot:** owner `reboot go`. Reboot 15:36:15 (+2 s timer); `ssh pc-gate-ts` back 15:37:07 (52 s, uptime 20.6 s); tailscaled enabled; online, direct; 0 login links in `journalctl -u tailscaled -b`; `/etc/resolv.conf` unchanged. Windows isolation ping (owner gave 100.102.74.100, live): f22 and pc-gate both `tailscale ping --icmp` = "no matching peer", `ping` 2/2 lost = PASS (blocked).
 
 ## Test 2: pc-gate on the other LAN / provider
 
 ### Step 6 (me + owner): move
 1. Me: `sudo poweroff` on pc-gate over SSH; I reply `pc-gate is off`.
 2. Owner steps 6. Reply `moved HH:MM`.
+- **Result 2026-11-03 step 6.1:** owner `6 go`; poweroff sent 15:44:33 over `pc-gate-ts`; no answer on 192.168.20.90 and 100.87.25.19 from 15:45:07 (checked again 15 s later).
 
 ### Step 7 (me): checks, ~5 min
 - `ssh pc-gate-ts hostname` = `GW3M710`, within 3 min of power-on.
 - `tailscale ping <pc-gate 100.x>`: record "direct" or "via DERP (<city>)". The other path stays untested; written down.
 - pc-gate: an address from the new LAN (`ip -4 -br addr`); `/etc/resolv.conf` = the new LAN's DNS from DHCP, no `100.100.100.100`; `timedatectl` = synchronized.
 - Reboot by me: back within 3 min.
+- **Result 2026-11-03 step 7:** owner: power-on 15:52 on a separate LAN, RS-485 adapter out. `ssh pc-gate-ts hostname` = GW3M710 at 15:53:28 (uptime 77 s) = PASS. Address 192.168.111.127/24 (new LAN, DHCP). `tailscale ping`: direct via 89.136.38.110:41641, 39 ms (DERP path NOT TESTED; nearest DERP Warsaw, UDP true). resolv.conf from DHCP: 208.67.222.222, 1.1.1.1, 8.8.8.8, no 100.100.100.100 = PASS. Time: synchronized at 15:54:47 (uptime 155 s, offset -515 ms, debian pool) = PASS.
+- **Result 2026-11-03 step 7 reboot:** reboot 15:55:01 (+2 s), `ssh pc-gate-ts` back 15:55:54 (53 s) = PASS; 0 login links in this boot.
 
 ### Step 8 (owner + me): network cut, ~12 min
 Owner steps 8: cable out 10 min, back in. Me: ssh works within 1 min of `back`; `tailscale status` online.
+- **Result 2026-11-03:** owner `skip 8` = NOT TESTED.
 
 ---
 

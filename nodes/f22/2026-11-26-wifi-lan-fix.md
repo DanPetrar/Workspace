@@ -12,6 +12,7 @@
 
 ## State after
 - eno1 192.168.20.222 (metric 1002), wlp2s0 192.168.20.133 (metric 600). The default route still prefers WiFi.
+- 2026-11-27: WiFi metric changed to 2000, never default; see `2026-11-27-wifi-route-tmux.md`.
 - NM config `/etc/NetworkManager/conf.d/f22.conf`: eno1 unmanaged, dns=none.
 
 ## Search words
